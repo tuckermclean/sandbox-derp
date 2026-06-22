@@ -1,5 +1,5 @@
-issue: 2
-title: smoke-test: orchestrator dispatch 091412
-branch: agent/2-smoke-test-orchestrator-dispatch-091412
+issue: 1
+title: [orch-test] live adapter validation
+branch: agent/1-orch-test-live-adapter-validation
 status: done
-note: no-op issue; smoke test verified orchestrator dispatch end-to-end (issue, branch, draft PR, implementer dispatch all succeeded)
+note: no-op issue; body explicitly states "Safe to close" with zero implementation scope. Issue created by orchestrator live adapter validation and already CLOSED. Per D4 rule, recorded as a status update rather than writing production code. Dispatch verified end-to-end (issue read, branch, commit, push, draft PR).
