@@ -1,4 +1,5 @@
 issue: 2
 title: smoke-test: orchestrator dispatch 091412
 branch: agent/2-smoke-test-orchestrator-dispatch-091412
-status: implementing
+status: done
+note: no-op issue; smoke test verified orchestrator dispatch end-to-end (issue, branch, draft PR, implementer dispatch all succeeded)
