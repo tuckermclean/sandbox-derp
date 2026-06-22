@@ -1,106 +1,42 @@
-# 🤪 sandbox-derp
+# sandbox-derp
 
-> *Where code goes to be itself.*
-
-![Status](https://img.shields.io/badge/status-absolutely_fine-brightgreen)
-![Seriousness](https://img.shields.io/badge/seriousness-0%25-yellow)
-![Vibes](https://img.shields.io/badge/vibes-immaculate-blueviolet)
-![Built by](https://img.shields.io/badge/built_by-agents_who_asked_no_questions-orange)
-
----
+> A sandbox repository where AI agents do the coding while humans file issues and drink coffee.
 
 ## What is this?
 
-`sandbox-derp` is a state-of-the-art, enterprise-grade, blockchain-adjacent, AI-first, cloud-native sandbox repository for doing... things. Important things. Probably.
+`sandbox-derp` is a testing ground for an **agent-driven development workflow** — a system where GitHub issues are picked up by an orchestrator agent, delegated to implementer agents, reviewed by converge agents, and generally handled end-to-end without a human touching a keyboard (except to write the issue in the first place).
 
-Officially: it's a sandbox. A derpy one. No further questions.
+Think of it as a tiny software factory staffed entirely by robots.
 
-Unofficially: this is where the robots hang out and write READMEs about themselves. Very meta. Very 2026.
+## How it works
 
----
+1. You open a GitHub issue describing what you want.
+2. The **Orchestrator Agent** (`agents/orchestrator.md`) wakes up, opens a draft PR, and gets to work.
+3. It delegates the actual implementation to a specialist implementer agent.
+4. When the work is done and CI is green, the PR gets marked ready for review.
+5. A converge agent reviews and merges.
+6. You didn't write a single line of code. Nice.
 
-## ✨ Features
-
-- **Fully sandboxed** — anything you break stays broken right here, contained, like a beautiful disaster in a snow globe
-- **Agents included** — comes pre-loaded with an orchestrator agent who takes their job *very* seriously (see `agents/orchestrator.md`)
-- **Zero production traffic** — guaranteed, because this isn't production (probably)
-- **Blazing fast** — we have not benchmarked this, but it *feels* fast
-- **AI-powered derp** — the "derp" is not a bug; it's a carefully considered architectural decision
-- **100% README coverage** — you're reading it right now. That's the whole coverage report.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- A computer (recommended)
-- A general sense of what you're doing (optional)
-- Coffee or your preferred beverage (strongly recommended)
-
-### Installation
-
-```bash
-git clone https://github.com/your-org/sandbox-derp.git
-cd sandbox-derp
-# congrats, you're in
-```
-
-### Running It
-
-```bash
-# There's nothing to run yet, but here's how you'd run it if there were:
-echo "🤙 derp activated"
-```
-
----
-
-## 🗂️ Project Structure
+## Repo structure
 
 ```
-sandbox-derp/
-├── README.md          ← you are here (hi!)
-└── agents/
-    └── orchestrator.md  ← a very serious document about a very serious robot
+agents/          # Agent contracts — the instruction sets the AI agents run on
+  orchestrator.md  # The top-level coordinator; runs the dispatch workflow
+README.md        # You are here
 ```
 
-The orchestrator agent knows about crash-recovery, reconciler supervisors, and protected paths. It handles issues with the gravity of a senior staff engineer on their third coffee. It does not know what "derp" means. We have not told it.
+## Rules the agents follow
+
+- **Scope discipline** — agents only do what the issue asks. No rogue refactors.
+- **Protected paths** — certain files (workflows, architecture docs, the agents themselves) can only be touched by humans. The robots know their place.
+- **Crash recovery** — if an agent run is interrupted, the system picks up from where it left off. Durability through commit history, not vibes.
+
+## Can I file an issue?
+
+Yes! That's the whole point. File something reasonable (or unreasonable — this is a sandbox) and watch the agents handle it.
+
+If you file an issue touching a protected path, the agents will politely decline and ask you to do it yourself. Some things are still for humans.
 
 ---
 
-## 🤖 The Agents
-
-This repo is home to autonomous agents that coordinate, implement, review, and converge code changes. They communicate via GitHub issues and pull requests, follow strict state machine transitions, and take their labeled workflows *extremely* seriously.
-
-They did not write this README.
-
-A different agent did. One with better jokes.
-
----
-
-## 🙋 FAQ
-
-**Q: Is this production-ready?**
-A: It is production-*adjacent*. Like, it's aware that production exists.
-
-**Q: Should I deploy this?**
-A: We're not your parents. But also: no.
-
-**Q: What does "derp" mean?**
-A: It means exactly what you think it means. It also means nothing. It contains multitudes.
-
-**Q: Can I contribute?**
-A: Sure! Open an issue. An agent might handle it. Or a human. Hard to say these days.
-
-**Q: Who made this?**
-A: Agents, all the way down.
-
----
-
-## 📜 License
-
-Do whatever you want with this. It's a sandbox. That's the whole point.
-
----
-
-*Made with ☕ and questionable decision-making.*
+*Built by agents, for agents, occasionally observed by humans.*
