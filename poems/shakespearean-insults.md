@@ -13,13 +13,13 @@
 > — *Richard III*, Act I, Scene 3
 
 > **"Away, you three-inch fool!"**
-> — *The Taming of the Shrew*, Act III, Scene 3
+> — *The Taming of the Shrew*, Act IV, Scene 1
 
 > **"I am sick when I do look on thee."**
 > — *A Midsummer Night's Dream*, Act II, Scene 1
 
-> **"Thou art as loathsome as a toad."**
-> — *Troilus and Cressida*, Act III, Scene 2
+> **"The devil damn thee black, thou cream-faced loon!"**
+> — *Macbeth*, Act V, Scene 3
 
 ---
 
@@ -54,7 +54,7 @@
 > — *Henry V*, Act IV, Scene 4
 
 > **"There's no more faith in thee than in a stewed prune."**
-> — *Henry IV, Part 2*, Act III, Scene 2
+> — *Henry IV, Part 1*, Act III, Scene 3
 
 > **"Go, prick thy face and over-red thy fear, thou lily-livered boy."**
 > — *Macbeth*, Act V, Scene 3
