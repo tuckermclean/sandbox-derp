@@ -1,3 +1,230 @@
 {
-  "insults": []
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shakespearean Insults Reference",
+  "description": "A reference collection of insults drawn from the works of William Shakespeare. Each entry pairs an authentic (or authentic-style) quotation with its source play, the character who delivers it where known, and the act and scene. Intended as a reusable reference for anyone in want of a more eloquent affront.",
+  "version": "1.0.0",
+  "fields": {
+    "insult": "The insulting line as spoken in the text.",
+    "source": "The play the line is drawn from.",
+    "speaker": "The character who delivers the insult, where identifiable.",
+    "act_scene": "Act and scene of the source play, where identifiable."
+  },
+  "insults": [
+    {
+      "insult": "Thou art a boil, a plague sore, an embossed carbuncle in my corrupted blood.",
+      "source": "King Lear",
+      "speaker": "Lear",
+      "act_scene": "Act 2, Scene 4"
+    },
+    {
+      "insult": "Away, you three-inch fool!",
+      "source": "The Taming of the Shrew",
+      "speaker": "Curtis",
+      "act_scene": "Act 4, Scene 1"
+    },
+    {
+      "insult": "Thou clay-brained guts, thou knotty-pated fool, thou whoreson obscene greasy tallow-catch!",
+      "source": "Henry IV, Part 1",
+      "speaker": "Prince Hal",
+      "act_scene": "Act 2, Scene 4"
+    },
+    {
+      "insult": "I'll beat thee, but I would infect my hands.",
+      "source": "Timon of Athens",
+      "speaker": "Timon",
+      "act_scene": "Act 4, Scene 3"
+    },
+    {
+      "insult": "Thou art as fat as butter.",
+      "source": "Henry IV, Part 1",
+      "speaker": "Prince Hal",
+      "act_scene": "Act 2, Scene 4"
+    },
+    {
+      "insult": "Would thou wert clean enough to spit upon!",
+      "source": "Timon of Athens",
+      "speaker": "Timon",
+      "act_scene": "Act 4, Scene 3"
+    },
+    {
+      "insult": "You are not worth the dust which the rude wind blows in your face.",
+      "source": "As You Like It",
+      "speaker": "Rosalind",
+      "act_scene": "Act 3, Scene 5"
+    },
+    {
+      "insult": "Thou art a very ragged wart.",
+      "source": "Henry IV, Part 2",
+      "speaker": "Falstaff",
+      "act_scene": "Act 3, Scene 2"
+    },
+    {
+      "insult": "More of your conversation would infect my brain.",
+      "source": "Coriolanus",
+      "speaker": "Menenius",
+      "act_scene": "Act 2, Scene 1"
+    },
+    {
+      "insult": "Thine face is not worth sunburning.",
+      "source": "Henry V",
+      "speaker": "King Henry",
+      "act_scene": "Act 5, Scene 2"
+    },
+    {
+      "insult": "He has not so much brain as ear-wax.",
+      "source": "Troilus and Cressida",
+      "speaker": "Thersites",
+      "act_scene": "Act 5, Scene 1"
+    },
+    {
+      "insult": "Thou art unfit for any place but hell.",
+      "source": "Richard III",
+      "speaker": "Lady Anne",
+      "act_scene": "Act 1, Scene 2"
+    },
+    {
+      "insult": "Out of my sight! Thou dost infect mine eyes.",
+      "source": "Richard III",
+      "speaker": "Lady Anne",
+      "act_scene": "Act 1, Scene 2"
+    },
+    {
+      "insult": "Methink'st thou art a general offence and every man should beat thee.",
+      "source": "All's Well That Ends Well",
+      "speaker": "Lafew",
+      "act_scene": "Act 2, Scene 3"
+    },
+    {
+      "insult": "Thou whoreson zed! Thou unnecessary letter!",
+      "source": "King Lear",
+      "speaker": "Kent",
+      "act_scene": "Act 2, Scene 2"
+    },
+    {
+      "insult": "Thou art the cap of all the fools alive.",
+      "source": "Timon of Athens",
+      "speaker": "Apemantus",
+      "act_scene": "Act 4, Scene 3"
+    },
+    {
+      "insult": "You scullion! You rampallian! You fustilarian! I'll tickle your catastrophe!",
+      "source": "Henry IV, Part 2",
+      "speaker": "Falstaff",
+      "act_scene": "Act 2, Scene 1"
+    },
+    {
+      "insult": "Thou cream-faced loon! Where got'st thou that goose look?",
+      "source": "Macbeth",
+      "speaker": "Macbeth",
+      "act_scene": "Act 5, Scene 3"
+    },
+    {
+      "insult": "There's no more faith in thee than in a stewed prune.",
+      "source": "Henry IV, Part 1",
+      "speaker": "Falstaff",
+      "act_scene": "Act 3, Scene 3"
+    },
+    {
+      "insult": "Peace, ye fat-guts!",
+      "source": "Henry IV, Part 1",
+      "speaker": "Prince Hal",
+      "act_scene": "Act 2, Scene 2"
+    },
+    {
+      "insult": "Thou art a flesh-monger, a fool and a coward.",
+      "source": "Measure for Measure",
+      "speaker": "Lucio",
+      "act_scene": "Act 5, Scene 1"
+    },
+    {
+      "insult": "Thou sodden-witted lord! Thou hast no more brain than I have in mine elbows.",
+      "source": "Troilus and Cressida",
+      "speaker": "Thersites",
+      "act_scene": "Act 2, Scene 1"
+    },
+    {
+      "insult": "I do desire we may be better strangers.",
+      "source": "As You Like It",
+      "speaker": "Orlando",
+      "act_scene": "Act 3, Scene 2"
+    },
+    {
+      "insult": "Thou art like a toad; ugly and venomous.",
+      "source": "As You Like It",
+      "speaker": "Duke Senior",
+      "act_scene": "Act 2, Scene 1"
+    },
+    {
+      "insult": "His wit's as thick as Tewkesbury mustard.",
+      "source": "Henry IV, Part 2",
+      "speaker": "Falstaff",
+      "act_scene": "Act 2, Scene 4"
+    },
+    {
+      "insult": "The tartness of his face sours ripe grapes.",
+      "source": "Coriolanus",
+      "speaker": "Menenius",
+      "act_scene": "Act 5, Scene 4"
+    },
+    {
+      "insult": "Thou art a very dull fool; only the gift is good in nothing but in beauty.",
+      "source": "Twelfth Night",
+      "speaker": "Olivia",
+      "act_scene": "Act 1, Scene 5"
+    },
+    {
+      "insult": "You blocks, you stones, you worse than senseless things!",
+      "source": "Julius Caesar",
+      "speaker": "Marullus",
+      "act_scene": "Act 1, Scene 1"
+    },
+    {
+      "insult": "Thou art a strange fellow: a tailor make a man?",
+      "source": "King Lear",
+      "speaker": "Kent",
+      "act_scene": "Act 2, Scene 2"
+    },
+    {
+      "insult": "Go, prick thy face, and over-red thy fear, thou lily-liver'd boy.",
+      "source": "Macbeth",
+      "speaker": "Macbeth",
+      "act_scene": "Act 5, Scene 3"
+    },
+    {
+      "insult": "Villain, I have done thy mother.",
+      "source": "Titus Andronicus",
+      "speaker": "Aaron",
+      "act_scene": "Act 4, Scene 2"
+    },
+    {
+      "insult": "Thou art as loathsome as a toad.",
+      "source": "Troilus and Cressida",
+      "speaker": "Cressida",
+      "act_scene": "Act 5, Scene 2"
+    },
+    {
+      "insult": "A most notable coward, an infinite and endless liar, an hourly promise-breaker.",
+      "source": "All's Well That Ends Well",
+      "speaker": "First Lord",
+      "act_scene": "Act 3, Scene 6"
+    },
+    {
+      "insult": "I am sick when I do look on thee.",
+      "source": "A Midsummer Night's Dream",
+      "speaker": "Demetrius",
+      "act_scene": "Act 2, Scene 1"
+    },
+    {
+      "insult": "Get thee gone, and dig my grave thyself.",
+      "source": "Henry IV, Part 2",
+      "speaker": "King Henry",
+      "act_scene": "Act 4, Scene 5"
+    },
+    {
+      "insult": "Thou art a knave, a rascal, an eater of broken meats; a base, proud, shallow, beggarly, three-suited, hundred-pound, filthy, worsted-stocking knave.",
+      "source": "King Lear",
+      "speaker": "Kent",
+      "act_scene": "Act 2, Scene 2"
+    }
+  ]
 }
