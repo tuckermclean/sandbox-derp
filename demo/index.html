@@ -1,2 +1,274 @@
 <!doctype html>
-<title>Demo (work in progress)</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Flowfield — a single-shot prompt</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #05060a; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  #scene { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  .overlay {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 28px clamp(20px, 5vw, 56px);
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(5,6,10,0.78), rgba(5,6,10,0));
+    z-index: 2;
+  }
+  .title {
+    font-weight: 700;
+    font-size: clamp(26px, 6vw, 52px);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: #f4f6ff;
+    text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+  }
+  .title em {
+    font-style: normal;
+    background: linear-gradient(90deg, #7df9ff, #a78bfa, #ff8ad4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub {
+    margin-top: 10px;
+    font-size: clamp(13px, 2.6vw, 17px);
+    color: #9aa3c0;
+    max-width: 46ch;
+  }
+  .hint {
+    margin-top: 14px;
+    font-size: clamp(11px, 2.2vw, 13px);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #5e688a;
+  }
+
+  .badge {
+    position: fixed;
+    top: clamp(16px, 4vw, 28px);
+    left: clamp(20px, 5vw, 56px);
+    z-index: 2;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #cdd4ee;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #7df9ff;
+    box-shadow: 0 0 10px #7df9ff;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div class="badge"><span class="dot"></span> Single-file HTML &middot; no dependencies</div>
+
+  <div class="overlay">
+    <div class="title">This is from a <em>single-shot prompt</em>.</div>
+    <div class="sub">A living flow field of thousands of particles drifting through animated Perlin-style noise. Pure vanilla JS &amp; Canvas — no libraries, no network.</div>
+    <div class="hint">Move / touch to steer &middot; click to ignite</div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("scene");
+  const ctx = canvas.getContext("2d", { alpha: false });
+
+  let W = 0, H = 0, dpr = 1;
+  const PALETTE = [
+    [125, 249, 255],
+    [167, 139, 250],
+    [255, 138, 212],
+    [120, 200, 255]
+  ];
+
+  // ---- Value-noise field (lightweight, deterministic) ----------------------
+  const PERM = new Uint8Array(512);
+  (() => {
+    const p = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) p[i] = i;
+    let seed = 1337;
+    const rand = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    for (let i = 255; i > 0; i--) {
+      const j = (rand() * (i + 1)) | 0;
+      const t = p[i]; p[i] = p[j]; p[j] = t;
+    }
+    for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+  })();
+
+  const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  const grad = (h, x, y) => {
+    const u = (h & 1) ? x : -x;
+    const v = (h & 2) ? y : -y;
+    return u + v;
+  };
+  // 2D gradient noise, returns ~[-1, 1]
+  const noise2 = (x, y) => {
+    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+    x -= Math.floor(x); y -= Math.floor(y);
+    const u = fade(x), v = fade(y);
+    const A = PERM[X] + Y, B = PERM[X + 1] + Y;
+    const lerp = (a, b, t) => a + t * (b - a);
+    return lerp(
+      lerp(grad(PERM[A], x, y),     grad(PERM[B], x - 1, y),     u),
+      lerp(grad(PERM[A + 1], x, y - 1), grad(PERM[B + 1], x - 1, y - 1), u),
+      v
+    );
+  };
+
+  // ---- Particles -----------------------------------------------------------
+  const NOISE_SCALE = 0.0016;   // spatial frequency of the field
+  const FLOW_SPEED = 1.7;       // particle base speed
+  const FIELD_DRIFT = 0.00008;  // how fast the field itself evolves
+  let particles = [];
+
+  const targetCount = () => {
+    const area = W * H;
+    return Math.max(900, Math.min(7000, Math.round(area / 1600)));
+  };
+
+  const spawn = (p) => {
+    p.x = Math.random() * W;
+    p.y = Math.random() * H;
+    p.life = 40 + Math.random() * 220;
+    p.age = 0;
+    const c = PALETTE[(Math.random() * PALETTE.length) | 0];
+    p.r = c[0]; p.g = c[1]; p.b = c[2];
+    return p;
+  };
+
+  const buildParticles = () => {
+    const n = targetCount();
+    particles = new Array(n);
+    for (let i = 0; i < n; i++) particles[i] = spawn({});
+  };
+
+  // ---- Pointer -------------------------------------------------------------
+  const pointer = { x: -1e9, y: -1e9, active: false, burst: 0 };
+  const setPointer = (x, y) => { pointer.x = x; pointer.y = y; pointer.active = true; };
+
+  // ---- Resize --------------------------------------------------------------
+  const resize = () => {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = "#05060a";
+    ctx.fillRect(0, 0, W, H);
+    buildParticles();
+  };
+
+  // ---- Animation loop ------------------------------------------------------
+  let t = 0;
+  let last = performance.now();
+
+  const frame = (now) => {
+    const dt = Math.min((now - last) / 16.667, 2.5); // normalized to 60fps, clamped
+    last = now;
+    t += dt;
+
+    // Fade previous frame for soft motion trails.
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(5, 6, 10, 0.085)";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalCompositeOperation = "lighter";
+    const zt = t * FIELD_DRIFT * 1000;
+    const pull = pointer.active ? 1 : 0;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const px = p.x, py = p.y;
+
+      // Flow direction from the noise field.
+      const angle = noise2(px * NOISE_SCALE, py * NOISE_SCALE + zt) * Math.PI * 3;
+      let vx = Math.cos(angle) * FLOW_SPEED;
+      let vy = Math.sin(angle) * FLOW_SPEED;
+
+      // Pointer interaction: swirl + attraction, with a click "ignite" burst.
+      if (pull) {
+        const dx = pointer.x - px, dy = pointer.y - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 240 * 240) {
+          const d = Math.sqrt(d2) || 1;
+          const f = (1 - d / 240);
+          // perpendicular swirl
+          vx += (-dy / d) * f * 5.5;
+          vy += (dx / d) * f * 5.5;
+          // gentle inward pull, stronger on burst
+          vx += (dx / d) * f * (1.2 + pointer.burst * 6);
+          vy += (dy / d) * f * (1.2 + pointer.burst * 6);
+        }
+      }
+
+      p.x = px + vx * dt;
+      p.y = py + vy * dt;
+      p.age += dt;
+
+      // Recycle dead or off-screen particles.
+      if (p.age > p.life || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
+        spawn(p);
+        continue;
+      }
+
+      const speed = Math.min(1, (Math.abs(vx) + Math.abs(vy)) / 9);
+      const alpha = (0.12 + speed * 0.5) * (1 - p.age / p.life);
+      ctx.fillStyle = "rgba(" + p.r + "," + p.g + "," + p.b + "," + alpha.toFixed(3) + ")";
+      ctx.fillRect(p.x, p.y, 1.6, 1.6);
+    }
+
+    if (pointer.burst > 0) pointer.burst = Math.max(0, pointer.burst - 0.04 * dt);
+
+    requestAnimationFrame(frame);
+  };
+
+  // ---- Events --------------------------------------------------------------
+  window.addEventListener("resize", resize, { passive: true });
+  window.addEventListener("mousemove", (e) => setPointer(e.clientX, e.clientY), { passive: true });
+  window.addEventListener("mouseleave", () => { pointer.active = false; });
+  window.addEventListener("mousedown", (e) => { setPointer(e.clientX, e.clientY); pointer.burst = 1; });
+  window.addEventListener("touchstart", (e) => {
+    const tch = e.touches[0];
+    if (tch) { setPointer(tch.clientX, tch.clientY); pointer.burst = 1; }
+  }, { passive: true });
+  window.addEventListener("touchmove", (e) => {
+    const tch = e.touches[0];
+    if (tch) setPointer(tch.clientX, tch.clientY);
+  }, { passive: true });
+  window.addEventListener("touchend", () => { pointer.active = false; }, { passive: true });
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
