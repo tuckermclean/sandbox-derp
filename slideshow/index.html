@@ -237,12 +237,12 @@
 <footer>
   <div class="dots" id="dots"></div>
   <div class="controls">
-    <button class="btn-playpause" id="btnPlay">&#9646;&#9646; Pause</button>
+    <button class="btn-playpause" id="btnPlay">⏸ Pause</button>
     <span class="slide-counter" id="counter">1 / 1</span>
   </div>
   <p class="source-note">
-    Images: Wikimedia Commons (CC-licensed). Google Images was not used — hotlinking
-    its results is unreliable and unlicensable.
+    Images sourced from Wikimedia Commons, each under individual Creative Commons license (CC-BY/CC-BY-SA).
+    Google Images was not used — hotlinking its results is unreliable and unlicensable.
   </p>
 </footer>
 
@@ -276,14 +276,14 @@
     {
       url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Edin_D%C5%BEeko_%282019%29.jpg/800px-Edin_D%C5%BEeko_%282019%29.jpg",
       title: "Edin Džeko — Bosnia's all-time top scorer",
-      caption: "The Roma and Fenerbahçe veteran leads Bosnia's attack. With more than 65 international goals, his World Cup swansong is a must-watch.",
+      caption: "A veteran of international football with over 65 goals for Bosnia. His experience and proven goal-scoring will be critical for Bosnia's 2026 World Cup campaign.",
       fallbackTitle: "Edin Džeko",
       fallbackSub: "Bosnia's all-time leading goal scorer"
     },
     {
       url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Miralem_Pjani%C4%87_%282017%29.jpg/800px-Miralem_Pjani%C4%87_%282017%29.jpg",
       title: "Miralem Pjanić — midfield maestro",
-      caption: "The elegant playmaker who starred for Juventus and Barcelona brings world-class quality to Bosnia's 2026 midfield engine.",
+      caption: "An elegant playmaker with top-flight European experience at Juventus and Barcelona. Bosnia will depend on his midfield quality at the 2026 World Cup.",
       fallbackTitle: "Miralem Pjanić",
       fallbackSub: "Bosnia's midfield maestro"
     },
@@ -344,7 +344,7 @@
     div.setAttribute("aria-label", s.title);
 
     const img = document.createElement("img");
-    img.src = s.url;
+    if (s.url.startsWith("https://")) img.src = s.url;
     img.alt = s.title;
 
     // Fallback container shown when image fails to load
@@ -375,7 +375,7 @@
     const btn = document.createElement("button");
     btn.className = "dot" + (i === 0 ? " active" : "");
     btn.setAttribute("aria-label", `Go to slide ${i + 1}`);
-    btn.addEventListener("click", () => { if (playing) startTimer(); goTo(i); });
+    btn.addEventListener("click", () => navigate(() => goTo(i)));
     dotsEl.appendChild(btn);
     return btn;
   });
@@ -385,7 +385,8 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function goTo(n) {
@@ -410,29 +411,33 @@
     timer = null;
   }
 
+  function navigate(fn) {
+    if (playing) startTimer();
+    fn();
+  }
+
   function togglePlay() {
     playing = !playing;
     if (playing) {
       startTimer();
-      btnPlay.innerHTML = "&#9646;&#9646; Pause";
+      btnPlay.textContent = "⏸ Pause";
     } else {
       pauseTimer();
-      btnPlay.innerHTML = "&#9654; Play";
+      btnPlay.textContent = "▶ Play";
     }
   }
 
-  btnNext.addEventListener("click", () => { if (playing) startTimer(); next(); });
-  btnPrev.addEventListener("click", () => { if (playing) startTimer(); prev(); });
+  btnNext.addEventListener("click", () => navigate(next));
+  btnPrev.addEventListener("click", () => navigate(prev));
   btnPlay.addEventListener("click", togglePlay);
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") { if (playing) startTimer(); next(); }
-    else if (e.key === "ArrowLeft") { if (playing) startTimer(); prev(); }
+    if (e.key === "ArrowRight") navigate(next);
+    else if (e.key === "ArrowLeft") navigate(prev);
     else if (e.key === " ") { e.preventDefault(); togglePlay(); }
   });
 
   // Init
-  counter.textContent = `1 / ${SLIDES.length}`;
   startTimer();
 </script>
 
