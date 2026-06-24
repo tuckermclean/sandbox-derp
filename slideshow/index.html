@@ -249,6 +249,13 @@
 </footer>
 
 <script>
+  // Frame-busting guard: frame-ancestors in <meta> CSP is ignored by browsers
+  // (W3C CSP Level 3 spec). This JS guard provides the actual clickjacking defence.
+  if (window !== window.top) {
+    document.body.innerHTML = '';
+    window.top.location = window.location.href;
+  }
+
   // ---------------------------------------------------------------------------
   // Slide data. Images from Wikimedia Commons for stability and licensing.
   // Captions tie each photo to Bosnia & Herzegovina at the 2026 World Cup.
