@@ -436,7 +436,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowRight") navigate(next);
     else if (e.key === "ArrowLeft") navigate(prev);
-    else if (e.key === " ") { e.preventDefault(); togglePlay(); }
+    else if (e.key === " ") { if (e.target.tagName !== 'BUTTON') e.preventDefault(); togglePlay(); }
   });
 
   // Init
