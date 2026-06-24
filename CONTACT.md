@@ -1,3 +1,3 @@
 # Contact
 
-<!-- TODO(implementer): replace with a single friendly line on how to reach the maintainers. Keep it minimal. -->
+Have a question or want to reach us? [Open an issue](https://github.com/tuckermclean/sandbox-derp/issues) and we'll get back to you.
