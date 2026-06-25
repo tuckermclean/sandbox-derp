@@ -334,7 +334,7 @@ function resetProgress() {
 
 function startAuto() {
   if (timer !== null) return;
-  timer = setInterval(() => showSlide(current + 1, 1), INTERVAL);
+  timer = setInterval(() => { resetProgress(); showSlide(current + 1, 1); }, INTERVAL);
   resetProgress();
 }
 
