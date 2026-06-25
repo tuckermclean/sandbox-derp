@@ -1,18 +1,346 @@
 <!doctype html>
-<!--
-  Slideshow app — issue #59
-  SKELETON ONLY. Implementer fills this in per the PR plan.
-
-  TODO:
-    - Single self-contained HTML file (inline CSS + JS), no build step.
-    - Slideshow of Bosnia & Herzegovina at the 2026 FIFA World Cup.
-    - Use stable, hotlink-friendly image URLs (Wikimedia Commons upload.wikimedia.org).
-    - Each image MUST load: add onerror fallback + verify every URL returns HTTP 200.
-    - Controls: prev/next, auto-advance, captions.
--->
+<!-- Bosnia & Herzegovina at the 2026 FIFA World Cup — issue #59 -->
 <html lang="en">
-<head><meta charset="utf-8"><title>Bosnia at World Cup 2026</title></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bosnia &amp; Herzegovina at World Cup 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a1628;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    header {
+      text-align: center;
+      padding: 1.5rem 1rem 0.5rem;
+    }
+    header h1 {
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      color: #f0c040;
+      letter-spacing: 0.04em;
+    }
+    header p {
+      font-size: 0.85rem;
+      color: #8fa8c8;
+      margin-top: 0.25rem;
+    }
+
+    .slideshow {
+      position: relative;
+      width: min(90vw, 860px);
+      margin: 1.5rem auto;
+    }
+
+    .slide-track {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #111a2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .slide img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* broken-image placeholder */
+    .slide .placeholder {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: #8fa8c8;
+      font-size: 0.9rem;
+      padding: 1rem;
+      text-align: center;
+    }
+    .slide.img-error img { display: none; }
+    .slide.img-error .placeholder { display: flex; }
+
+    .caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      font-size: 0.85rem;
+      color: #dde6f5;
+      text-align: center;
+    }
+
+    /* nav buttons */
+    .btn-prev, .btn-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.45);
+      border: none;
+      color: #fff;
+      font-size: 1.6rem;
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .btn-prev { left: -1.3rem; }
+    .btn-next { right: -1.3rem; }
+    .btn-prev:hover, .btn-next:hover { background: rgba(240,192,64,0.7); }
+
+    /* dots */
+    .dots {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.9rem;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4a6080;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      padding: 0;
+    }
+    .dot.active { background: #f0c040; transform: scale(1.25); }
+
+    /* pause indicator */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+    }
+    .btn-pause {
+      background: none;
+      border: 1px solid #4a6080;
+      color: #8fa8c8;
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-pause:hover { border-color: #f0c040; color: #f0c040; }
+
+    .counter {
+      font-size: 0.8rem;
+      color: #4a6080;
+    }
+  </style>
+</head>
 <body>
-  <!-- slideshow goes here -->
+  <header>
+    <h1>Bosnia &amp; Herzegovina at the 2026 FIFA World Cup</h1>
+    <p>Group H — Canada &middot; Switzerland &middot; Bosnia &amp; Herzegovina &middot; Qatar</p>
+  </header>
+
+  <div class="slideshow">
+    <div class="slide-track" id="track">
+      <!-- slides injected by JS -->
+    </div>
+    <button class="btn-prev" id="btnPrev" aria-label="Previous slide">&#8249;</button>
+    <button class="btn-next" id="btnNext" aria-label="Next slide">&#8250;</button>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="controls">
+    <button class="btn-pause" id="btnPause">&#9646;&#9646; Pause</button>
+    <span class="counter" id="counter"></span>
+  </div>
+
+  <!-- inline SVG placeholder used when an image fails to load -->
+  <svg id="placeholder-svg" xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="img-broken" viewBox="0 0 80 60">
+      <rect width="80" height="60" fill="#1a2840"/>
+      <path d="M25 42 L40 20 L55 42Z" fill="none" stroke="#4a6080" stroke-width="2"/>
+      <circle cx="50" cy="28" r="4" fill="none" stroke="#4a6080" stroke-width="2"/>
+      <line x1="28" y1="38" x2="52" y2="38" stroke="#4a6080" stroke-width="2"/>
+    </symbol>
+  </svg>
+
+  <script>
+    const SLIDES = [
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/b/bf/Flag_of_Bosnia_and_Herzegovina.svg",
+        caption: "The flag of Bosnia & Herzegovina — the gold stars and blue represent Europe and the blue of peace."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Trionda_2026Fifa_World_Cup_Football_Championship_Official_Ball_at_Bic_Camera_Namba.jpg",
+        caption: "Trionda — the official match ball of the 2026 FIFA World Cup."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/0/00/CAN-BIH_2026-06-12.svg",
+        caption: "Match report: Canada vs Bosnia & Herzegovina — Group H, 12 June 2026."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/5/56/2026_FIFA_World_Cup_Match_26%2C_Switzerland_v_Bosnia_and_Herzegovina.jpg",
+        caption: "Switzerland vs Bosnia & Herzegovina — Group H match 26 at the 2026 FIFA World Cup."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/4/4e/SUI-BIH_2026-06-18.svg",
+        caption: "Match report: Switzerland vs Bosnia & Herzegovina — Group H, 18 June 2026."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/1/1c/BIH-QAT_2026-06-24.svg",
+        caption: "Match report: Bosnia & Herzegovina vs Qatar — Group H, 24 June 2026."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Bosna_i_Hercegovina_-_Njema%C4%8Dka_%2811.10.2024%29_3.jpg",
+        caption: "Bosnia & Herzegovina vs Germany — UEFA qualifying match, October 2024."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/a/a5/20150331_2026_AUT_BIH_2177_Edin_D%C5%BEeko.jpg",
+        caption: "Edin Džeko — Bosnia's all-time top scorer, one of the Dragons' greatest ever players."
+      },
+      {
+        src: "https://upload.wikimedia.org/wikipedia/commons/9/98/Bosnia_Soccer_Fans_at_King_Baudouin_Stadium_Brussels.jpg",
+        caption: "Bosnian football fans — the passionate support that travels with the Dragons."
+      }
+    ];
+
+    const ADVANCE_MS = 4000;
+
+    const track = document.getElementById("track");
+    const dotsEl = document.getElementById("dots");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    const btnPause = document.getElementById("btnPause");
+    const counter = document.getElementById("counter");
+
+    let current = 0;
+    let paused = false;
+    let timer = null;
+
+    // build slides
+    SLIDES.forEach((slide, i) => {
+      const div = document.createElement("div");
+      div.className = "slide" + (i === 0 ? " active" : "");
+      div.dataset.index = i;
+
+      const img = document.createElement("img");
+      img.src = slide.src;
+      img.alt = slide.caption;
+      img.onerror = () => {
+        div.classList.add("img-error");
+      };
+
+      // hover-pause
+      div.addEventListener("mouseenter", () => { paused = true; clearTimer(); updatePauseBtn(); });
+      div.addEventListener("mouseleave", () => { paused = false; startTimer(); updatePauseBtn(); });
+
+      const cap = document.createElement("div");
+      cap.className = "caption";
+      cap.textContent = slide.caption;
+
+      const ph = document.createElement("div");
+      ph.className = "placeholder";
+      ph.innerHTML = `<svg width="80" height="60"><use href="#img-broken"/></svg><span>Image unavailable</span>`;
+
+      div.appendChild(img);
+      div.appendChild(ph);
+      div.appendChild(cap);
+      track.appendChild(div);
+
+      // dot
+      const dot = document.createElement("button");
+      dot.className = "dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", "Slide " + (i + 1));
+      dot.addEventListener("click", () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    function updateCounter() {
+      counter.textContent = (current + 1) + " / " + SLIDES.length;
+    }
+
+    function updateDots() {
+      dotsEl.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("active", i === current));
+    }
+
+    function updateSlides() {
+      track.querySelectorAll(".slide").forEach((s, i) => s.classList.toggle("active", i === current));
+      updateDots();
+      updateCounter();
+    }
+
+    function goTo(n) {
+      current = (n + SLIDES.length) % SLIDES.length;
+      updateSlides();
+    }
+
+    function advance() { goTo(current + 1); }
+
+    function startTimer() {
+      clearTimer();
+      if (!paused) timer = setInterval(advance, ADVANCE_MS);
+    }
+
+    function clearTimer() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    function updatePauseBtn() {
+      btnPause.textContent = paused ? "▶ Play" : "⏸ Pause";
+    }
+
+    btnPrev.addEventListener("click", () => { goTo(current - 1); startTimer(); });
+    btnNext.addEventListener("click", () => { goTo(current + 1); startTimer(); });
+
+    btnPause.addEventListener("click", () => {
+      paused = !paused;
+      paused ? clearTimer() : startTimer();
+      updatePauseBtn();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft")  { goTo(current - 1); startTimer(); }
+      if (e.key === "ArrowRight") { goTo(current + 1); startTimer(); }
+      if (e.key === " ")          { btnPause.click(); e.preventDefault(); }
+    });
+
+    updateCounter();
+    startTimer();
+  </script>
 </body>
 </html>
