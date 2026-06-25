@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy"
-      content="upgrade-insecure-requests; default-src 'none'; img-src https://upload.wikimedia.org data:; style-src 'sha256-hnX82IrdQ7h/ZfouacXZXnYWWATFH5tQbdWby7Cn+5M='; script-src 'sha256-W2jyfnw0hUknvFob9s3smkQ1TKwfndVYNI9xa5/189Y='">
+      content="upgrade-insecure-requests; default-src 'none'; img-src https://upload.wikimedia.org data:image/svg+xml; style-src 'sha256-hnX82IrdQ7h/ZfouacXZXnYWWATFH5tQbdWby7Cn+5M='; script-src 'sha256-0mlNJkCDq2H4YAlmZ3EvIVHwgMMhfryu0zlw5uuEK1k='; base-uri 'none'; form-action 'none'">
 <title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -154,7 +154,7 @@
 
 <div id="header" role="presentation"></div>
 
-<div id="slideshow"></div>
+<div id="slideshow" role="region" aria-label="Bosnia & Herzegovina slideshow"></div>
 
 <div id="controls">
   <button type="button" class="ctrl-btn" id="prev" aria-label="Previous slide">&#8592;</button>
@@ -213,7 +213,8 @@ const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="ht
 const ALLOWED_IMG_ORIGIN = 'upload.wikimedia.org';
 function isSafeImgSrc(url) {
   try {
-    return new URL(url).hostname === ALLOWED_IMG_ORIGIN;
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === ALLOWED_IMG_ORIGIN;
   } catch (_) {
     return false;
   }
@@ -270,10 +271,12 @@ const dotEls = SLIDES.map((s, i) => {
 
 function goTo(idx) {
   if (!Number.isInteger(idx)) return;
+  const next = (idx + SLIDES.length) % SLIDES.length;
+  if (next === current) return;
   slideEls[current].classList.remove('active');
   slideEls[current].setAttribute('aria-hidden', 'true');
   dotEls[current].classList.remove('active');
-  current = (idx + SLIDES.length) % SLIDES.length;
+  current = next;
   slideEls[current].classList.add('active');
   slideEls[current].removeAttribute('aria-hidden');
   dotEls[current].classList.add('active');
@@ -302,7 +305,9 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].caption}`;
+setTimeout(() => {
+  announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].caption}`;
+}, 500);
 resetTimer();
 </script>
 </body>
