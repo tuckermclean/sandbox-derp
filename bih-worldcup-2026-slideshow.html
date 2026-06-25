@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://upload.wikimedia.org; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://upload.wikimedia.org; style-src 'unsafe-inline'; script-src 'sha256-r9cj+5p5brdYx6VHqfkZknoKocY0R6H1TOm+rzjR+Bw='; frame-ancestors 'none'; base-uri 'none'">
   <title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
   <style>
     :root {
@@ -164,7 +164,7 @@
   <div class="stage" id="stage">
     <button class="nav-btn" id="prev" aria-label="Previous slide">&#8592;</button>
     <div class="img-wrap" id="img-wrap">
-      <img id="slide-img" src="" alt="">
+      <img id="slide-img" src="data:," alt="">
       <div id="fallback">Could not load any images.<br>Check your network connection.</div>
     </div>
     <button class="nav-btn" id="next" aria-label="Next slide">&#8594;</button>
@@ -224,7 +224,7 @@ const slides = [
   {
     src: 'https://upload.wikimedia.org/wikipedia/commons/0/0f/Miralem_Pjanic.jpg',
     alt: 'Miralem Pjanić',
-    caption: 'Miralem Pjanić — midfield maestro and BiH national team stalwart',
+    caption: 'Miralem Pjanić — legendary midfield maestro and former BiH national team stalwart',
     credit: 'Wikimedia Commons'
   },
   {
@@ -276,7 +276,8 @@ slides.forEach((_, i) => {
   dotsEl.appendChild(btn);
 });
 
-function dots() { return Array.from(dotsEl.querySelectorAll('.dot')); }
+const dotButtons = Array.from(dotsEl.querySelectorAll('.dot'));
+function dots() { return dotButtons; }
 
 function updateUI() {
   const validTotal = slides.length - broken.size;
