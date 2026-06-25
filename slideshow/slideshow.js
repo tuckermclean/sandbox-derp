@@ -56,12 +56,16 @@ SLIDES.forEach((slide, i) => {
   const div = document.createElement("div");
   div.className = "slide" + (i === 0 ? " active" : "");
   div.dataset.index = i;
+  div.setAttribute("role", "group");
+  div.setAttribute("aria-roledescription", "slide");
+  div.setAttribute("aria-label", "Slide " + (i + 1) + " of " + SLIDES.length);
 
   const img = document.createElement("img");
   img.src = slide.src;
   img.alt = slide.caption;
   img.referrerPolicy = "no-referrer";
   img.crossOrigin = "anonymous";
+  if (i > 0) img.loading = "lazy";
   img.onerror = () => {
     div.classList.add("img-error");
   };
