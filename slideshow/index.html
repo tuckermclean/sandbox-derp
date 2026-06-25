@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src https://upload.wikimedia.org data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+<meta http-equiv="upgrade-insecure-requests" content="upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
 <title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -145,6 +149,18 @@
   }
   .img-fallback svg { width: 80px; height: 80px; }
   .img-fallback span { font-size: 14px; color: #ccc; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
 </style>
 </head>
 <body>
@@ -154,31 +170,33 @@
 <div id="slideshow"></div>
 
 <div id="controls">
-  <button class="ctrl-btn" id="prev" aria-label="Previous slide">&#8592;</button>
+  <button type="button" class="ctrl-btn" id="prev" aria-label="Previous slide">&#8592;</button>
   <div id="dots"></div>
-  <button class="ctrl-btn" id="next" aria-label="Next slide">&#8594;</button>
+  <button type="button" class="ctrl-btn" id="next" aria-label="Next slide">&#8594;</button>
 </div>
+
+<div id="slide-announce" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
 <script>
 const SLIDES = [
   {
     src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Flag_of_Bosnia_and_Herzegovina.svg/960px-Flag_of_Bosnia_and_Herzegovina.svg.png',
-    caption: 'Bosnia &amp; Herzegovina — The Dragons. Road to FIFA World Cup 2026.',
+    caption: 'Bosnia & Herzegovina — The Dragons. Road to FIFA World Cup 2026.',
     alt: 'Flag of Bosnia and Herzegovina'
   },
   {
     src: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/330px-2026_FIFA_World_Cup_emblem.svg.png',
-    caption: 'FIFA World Cup 2026 — hosted by the United States, Canada &amp; Mexico.',
+    caption: 'FIFA World Cup 2026 — hosted by the United States, Canada & Mexico.',
     alt: 'FIFA World Cup 2026 emblem'
   },
   {
     src: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/da/Football_Association_of_Bosnia_and_Herzegovina_logo.svg/330px-Football_Association_of_Bosnia_and_Herzegovina_logo.svg.png',
-    caption: 'Football Association of Bosnia &amp; Herzegovina — the governing body of Bosnian football.',
+    caption: 'Football Association of Bosnia & Herzegovina — the governing body of Bosnian football.',
     alt: 'Football Association of Bosnia and Herzegovina logo'
   },
   {
     src: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/20150331_2026_AUT_BIH_2177_Edin_D%C5%BEeko_%28cropped%29.jpg',
-    caption: 'Edin Džeko — Bosnia &amp; Herzegovina\'s all-time leading scorer and national icon.',
+    caption: 'Edin Džeko — Bosnia & Herzegovina\'s all-time leading scorer and national icon.',
     alt: 'Edin Džeko'
   },
   {
@@ -205,8 +223,18 @@ const SLIDES = [
 
 const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#002395"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="#FCDD09">⚽</text></svg>')}`;
 
+const ALLOWED_IMG_ORIGIN = 'upload.wikimedia.org';
+function isSafeImgSrc(url) {
+  try {
+    return new URL(url).hostname === ALLOWED_IMG_ORIGIN;
+  } catch (_) {
+    return false;
+  }
+}
+
 const container = document.getElementById('slideshow');
 const dotsEl = document.getElementById('dots');
+const announceEl = document.getElementById('slide-announce');
 let current = 0;
 let timer;
 
@@ -219,16 +247,18 @@ const slideEls = SLIDES.map((s, i) => {
   wrap.className = 'slide-img-wrap';
 
   const img = document.createElement('img');
-  img.src = s.src;
+  img.src = isSafeImgSrc(s.src) ? s.src : PLACEHOLDER_SVG;
   img.alt = s.alt;
+  img.referrerPolicy = 'no-referrer';
   img.onerror = function () {
+    this.onerror = null;
     this.src = PLACEHOLDER_SVG;
     this.alt = 'Image unavailable';
   };
 
   const cap = document.createElement('div');
   cap.className = 'slide-caption';
-  cap.innerHTML = s.caption;
+  cap.textContent = s.caption;
 
   wrap.appendChild(img);
   div.appendChild(wrap);
@@ -240,6 +270,7 @@ const slideEls = SLIDES.map((s, i) => {
 // Build dots
 const dotEls = SLIDES.map((_, i) => {
   const btn = document.createElement('button');
+  btn.type = 'button';
   btn.className = 'dot' + (i === 0 ? ' active' : '');
   btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
   btn.addEventListener('click', () => goTo(i));
@@ -248,11 +279,13 @@ const dotEls = SLIDES.map((_, i) => {
 });
 
 function goTo(idx) {
+  if (!Number.isInteger(idx)) return;
   slideEls[current].classList.remove('active');
   dotEls[current].classList.remove('active');
   current = (idx + SLIDES.length) % SLIDES.length;
   slideEls[current].classList.add('active');
   dotEls[current].classList.add('active');
+  announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].alt}`;
   resetTimer();
 }
 
@@ -265,8 +298,16 @@ document.getElementById('prev').addEventListener('click', () => goTo(current - 1
 document.getElementById('next').addEventListener('click', () => goTo(current + 1));
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') goTo(current - 1);
-  else if (e.key === 'ArrowRight') goTo(current + 1);
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(timer);
+  } else {
+    resetTimer();
+  }
 });
 
 resetTimer();
