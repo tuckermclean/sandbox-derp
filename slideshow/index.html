@@ -4,21 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy"
-      content="upgrade-insecure-requests; default-src 'none'; img-src https://upload.wikimedia.org data:; style-src 'unsafe-inline'; script-src 'sha256-iGHb7fipFub9LLTDuXsSFpF48yYqsaDPjWxJxbGy8OA=';">
-<meta name="referrer" content="no-referrer">
+      content="upgrade-insecure-requests; default-src 'none'; img-src https://upload.wikimedia.org data:; style-src 'sha256-bnclrof4ndUHN0Jnm01MKqtJbptAtGKLjmkDEGoQ+sQ='; script-src 'sha256-iGHb7fipFub9LLTDuXsSFpF48yYqsaDPjWxJxbGy8OA='">
 <title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --blue: #002395;
-    --yellow: #FCDD09;
-    --white: #ffffff;
+    --bih-blue: #002395;
+    --bih-yellow: #FCDD09;
+    --bih-white: #ffffff;
   }
 
   body {
     background: #000;
-    color: var(--white);
+    color: var(--bih-white);
     font-family: 'Segoe UI', Arial, sans-serif;
     height: 100vh;
     overflow: hidden;
@@ -40,7 +39,7 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.6s ease-in-out;
-    background: var(--blue);
+    background: var(--bih-blue);
   }
 
   .slide.active { opacity: 1; }
@@ -74,7 +73,7 @@
     font-weight: 500;
     letter-spacing: 0.02em;
     line-height: 1.4;
-    color: var(--white);
+    color: var(--bih-white);
     text-shadow: 0 1px 4px rgba(0,0,0,.8);
   }
 
@@ -86,7 +85,7 @@
     right: 0;
     z-index: 10;
     height: 6px;
-    background: linear-gradient(90deg, var(--blue) 0%, var(--yellow) 50%, var(--blue) 100%);
+    background: linear-gradient(90deg, var(--bih-blue) 0%, var(--bih-yellow) 50%, var(--bih-blue) 100%);
   }
 
   /* Controls */
@@ -104,8 +103,8 @@
 
   .ctrl-btn {
     background: rgba(0,0,0,.4);
-    border: 2px solid var(--yellow);
-    color: var(--yellow);
+    border: 2px solid var(--bih-yellow);
+    color: var(--bih-yellow);
     font-size: 22px;
     width: 44px;
     height: 44px;
@@ -134,20 +133,9 @@
     border: none;
   }
   .dot.active {
-    background: var(--yellow);
+    background: var(--bih-yellow);
     transform: scale(1.35);
   }
-
-  /* Fallback SVG shown when image fails */
-  .img-fallback {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    opacity: 0.7;
-  }
-  .img-fallback svg { width: 80px; height: 80px; }
-  .img-fallback span { font-size: 14px; color: #ccc; }
 
   .sr-only {
     position: absolute;
@@ -164,7 +152,7 @@
 </head>
 <body>
 
-<div id="header"></div>
+<div id="header" role="presentation"></div>
 
 <div id="slideshow"></div>
 
@@ -220,7 +208,7 @@ const SLIDES = [
   }
 ];
 
-const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#002395"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="#FCDD09">⚽</text></svg>')}`;
+const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#002395"/><circle cx="50" cy="50" r="35" fill="#FCDD09"/></svg>')}`;
 
 const ALLOWED_IMG_ORIGIN = 'upload.wikimedia.org';
 function isSafeImgSrc(url) {
@@ -235,12 +223,15 @@ const container = document.getElementById('slideshow');
 const dotsEl = document.getElementById('dots');
 const announceEl = document.getElementById('slide-announce');
 let current = 0;
-let timer;
+let timer = null;
 
 // Build slides
 const slideEls = SLIDES.map((s, i) => {
   const div = document.createElement('div');
   div.className = 'slide' + (i === 0 ? ' active' : '');
+  if (i !== 0) {
+    div.setAttribute('aria-hidden', 'true');
+  }
 
   const wrap = document.createElement('div');
   wrap.className = 'slide-img-wrap';
@@ -267,11 +258,11 @@ const slideEls = SLIDES.map((s, i) => {
 });
 
 // Build dots
-const dotEls = SLIDES.map((_, i) => {
+const dotEls = SLIDES.map((s, i) => {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'dot' + (i === 0 ? ' active' : '');
-  btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
+  btn.setAttribute('aria-label', `Go to slide ${i + 1}: ${s.alt}`);
   btn.addEventListener('click', () => goTo(i));
   dotsEl.appendChild(btn);
   return btn;
@@ -280,11 +271,13 @@ const dotEls = SLIDES.map((_, i) => {
 function goTo(idx) {
   if (!Number.isInteger(idx)) return;
   slideEls[current].classList.remove('active');
+  slideEls[current].setAttribute('aria-hidden', 'true');
   dotEls[current].classList.remove('active');
   current = (idx + SLIDES.length) % SLIDES.length;
   slideEls[current].classList.add('active');
+  slideEls[current].removeAttribute('aria-hidden');
   dotEls[current].classList.add('active');
-  announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].alt}`;
+  announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].caption}`;
   resetTimer();
 }
 
@@ -309,6 +302,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+announceEl.textContent = `Slide ${current + 1} of ${SLIDES.length}: ${SLIDES[current].caption}`;
 resetTimer();
 </script>
 </body>
