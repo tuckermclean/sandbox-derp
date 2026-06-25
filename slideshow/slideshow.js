@@ -47,7 +47,8 @@ const btnPause = document.getElementById("btnPause");
 const counter = document.getElementById("counter");
 
 let current = 0;
-let paused = false;
+let userPaused = false;
+let hoverPaused = false;
 let timer = null;
 
 // build slides
@@ -66,8 +67,8 @@ SLIDES.forEach((slide, i) => {
   };
 
   // hover-pause
-  div.addEventListener("mouseenter", () => { paused = true; clearTimer(); updatePauseBtn(); });
-  div.addEventListener("mouseleave", () => { paused = false; startTimer(); updatePauseBtn(); });
+  div.addEventListener("mouseenter", () => { hoverPaused = true; clearTimer(); updatePauseBtn(); });
+  div.addEventListener("mouseleave", () => { hoverPaused = false; if (!userPaused) startTimer(); updatePauseBtn(); });
 
   const cap = document.createElement("div");
   cap.className = "caption";
@@ -122,7 +123,7 @@ function advance() { goTo(current + 1); }
 
 function startTimer() {
   clearTimer();
-  if (!paused) timer = setInterval(advance, ADVANCE_MS);
+  if (!userPaused && !hoverPaused) timer = setInterval(advance, ADVANCE_MS);
 }
 
 function clearTimer() {
@@ -130,15 +131,15 @@ function clearTimer() {
 }
 
 function updatePauseBtn() {
-  btnPause.textContent = paused ? "▶ Play" : "⏸ Pause";
+  btnPause.textContent = userPaused ? "▶ Play" : "⏸ Pause";
 }
 
 btnPrev.addEventListener("click", () => { goTo(current - 1); startTimer(); });
 btnNext.addEventListener("click", () => { goTo(current + 1); startTimer(); });
 
 btnPause.addEventListener("click", () => {
-  paused = !paused;
-  paused ? clearTimer() : startTimer();
+  userPaused = !userPaused;
+  userPaused || hoverPaused ? clearTimer() : startTimer();
   updatePauseBtn();
 });
 
