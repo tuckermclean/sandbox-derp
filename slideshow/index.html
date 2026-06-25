@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --blue: #002395;
+    --yellow: #FCDD09;
+    --white: #ffffff;
+  }
+
+  body {
+    background: #000;
+    color: var(--white);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #slideshow {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+    background: var(--blue);
+  }
+
+  .slide.active { opacity: 1; }
+
+  .slide-img-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0 0 80px;
+  }
+
+  .slide img {
+    max-width: 90vw;
+    max-height: calc(100vh - 160px);
+    object-fit: contain;
+    display: block;
+  }
+
+  .slide-caption {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 24px;
+    background: rgba(0, 0, 0, 0.55);
+    font-size: clamp(14px, 2.5vw, 22px);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    color: var(--white);
+    text-shadow: 0 1px 4px rgba(0,0,0,.8);
+  }
+
+  /* Header stripe */
+  #header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    height: 6px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--yellow) 50%, var(--blue) 100%);
+  }
+
+  /* Controls */
+  #controls {
+    position: fixed;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .ctrl-btn {
+    background: rgba(0,0,0,.4);
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    font-size: 22px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .ctrl-btn:hover { background: rgba(252, 221, 9, 0.25); }
+
+  #dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border: none;
+  }
+  .dot.active {
+    background: var(--yellow);
+    transform: scale(1.35);
+  }
+
+  /* Fallback SVG shown when image fails */
+  .img-fallback {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    opacity: 0.7;
+  }
+  .img-fallback svg { width: 80px; height: 80px; }
+  .img-fallback span { font-size: 14px; color: #ccc; }
+</style>
+</head>
+<body>
+
+<div id="header"></div>
+
+<div id="slideshow"></div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="prev" aria-label="Previous slide">&#8592;</button>
+  <div id="dots"></div>
+  <button class="ctrl-btn" id="next" aria-label="Next slide">&#8594;</button>
+</div>
+
+<script>
+const SLIDES = [
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Flag_of_Bosnia_and_Herzegovina.svg/960px-Flag_of_Bosnia_and_Herzegovina.svg.png',
+    caption: 'Bosnia &amp; Herzegovina — The Dragons. Road to FIFA World Cup 2026.',
+    alt: 'Flag of Bosnia and Herzegovina'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/330px-2026_FIFA_World_Cup_emblem.svg.png',
+    caption: 'FIFA World Cup 2026 — hosted by the United States, Canada &amp; Mexico.',
+    alt: 'FIFA World Cup 2026 emblem'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/da/Football_Association_of_Bosnia_and_Herzegovina_logo.svg/330px-Football_Association_of_Bosnia_and_Herzegovina_logo.svg.png',
+    caption: 'Football Association of Bosnia &amp; Herzegovina — the governing body of Bosnian football.',
+    alt: 'Football Association of Bosnia and Herzegovina logo'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/20150331_2026_AUT_BIH_2177_Edin_D%C5%BEeko_%28cropped%29.jpg',
+    caption: 'Edin Džeko — Bosnia &amp; Herzegovina\'s all-time leading scorer and national icon.',
+    alt: 'Edin Džeko'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Miralem_Pjani%C4%87_2025.jpg',
+    caption: 'Miralem Pjanić — World-class midfielder and one of the Dragons\' greatest players.',
+    alt: 'Miralem Pjanić'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/1_Sead_Kola%C5%A1inac_2018_%28cropped2%29.jpg/330px-1_Sead_Kola%C5%A1inac_2018_%28cropped2%29.jpg',
+    caption: 'Sead Kolašinac — Bosnia\'s defensive cornerstone, capped over 50 times for his country.',
+    alt: 'Sead Kolašinac'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/7/75/Edin_Visca.jpg',
+    caption: 'Edin Višća — Creative attacker and key figure in Bosnia\'s qualifying campaigns.',
+    alt: 'Edin Višća'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Stadion_Grbavica_July_2022.jpg',
+    caption: 'Grbavica Stadium, Sarajevo — one of the iconic venues for Bosnian football.',
+    alt: 'Grbavica Stadium, Sarajevo'
+  }
+];
+
+const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#002395"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="#FCDD09">⚽</text></svg>')}`;
+
+const container = document.getElementById('slideshow');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+let timer;
+
+// Build slides
+const slideEls = SLIDES.map((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'slide' + (i === 0 ? ' active' : '');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'slide-img-wrap';
+
+  const img = document.createElement('img');
+  img.src = s.src;
+  img.alt = s.alt;
+  img.onerror = function () {
+    this.src = PLACEHOLDER_SVG;
+    this.alt = 'Image unavailable';
+  };
+
+  const cap = document.createElement('div');
+  cap.className = 'slide-caption';
+  cap.innerHTML = s.caption;
+
+  wrap.appendChild(img);
+  div.appendChild(wrap);
+  div.appendChild(cap);
+  container.appendChild(div);
+  return div;
+});
+
+// Build dots
+const dotEls = SLIDES.map((_, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'dot' + (i === 0 ? ' active' : '');
+  btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
+  btn.addEventListener('click', () => goTo(i));
+  dotsEl.appendChild(btn);
+  return btn;
+});
+
+function goTo(idx) {
+  slideEls[current].classList.remove('active');
+  dotEls[current].classList.remove('active');
+  current = (idx + SLIDES.length) % SLIDES.length;
+  slideEls[current].classList.add('active');
+  dotEls[current].classList.add('active');
+  resetTimer();
+}
+
+function resetTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => goTo(current + 1), 5000);
+}
+
+document.getElementById('prev').addEventListener('click', () => goTo(current - 1));
+document.getElementById('next').addEventListener('click', () => goTo(current + 1));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') goTo(current - 1);
+  else if (e.key === 'ArrowRight') goTo(current + 1);
+});
+
+resetTimer();
+</script>
+</body>
+</html>
