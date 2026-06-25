@@ -1,20 +1,360 @@
 <!DOCTYPE html>
-<!--
-  Single-file HTML slideshow: Bosnia & Herzegovina at the FIFA World Cup 2026.
-  SKELETON — to be implemented per the plan in the PR body (issue #66).
-
-  Requirements:
-  - Single self-contained HTML file (inline CSS + JS, no build step).
-  - Images pulled from online (Wikimedia Commons direct file URLs).
-  - Auto-advance with prev/next controls and captions.
-  - Verify every image URL resolves (no broken images).
--->
+<!-- agent: BiH World Cup 2026 slideshow — issue #66 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>Bosnia &amp; Herzegovina — FIFA World Cup 2026</title>
+  <style>
+    :root {
+      --bg:      #060d1a;
+      --surface: #0c1a30;
+      --blue:    #003da6;
+      --gold:    #f0bc00;
+      --text:    #e4ecf7;
+      --muted:   #7a90bb;
+      --border:  rgba(240,188,0,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px 32px;
+      gap: 14px;
+    }
+
+    h1 {
+      font-size: clamp(16px, 3.5vw, 24px);
+      font-weight: 700;
+      text-align: center;
+      background: linear-gradient(92deg, var(--gold) 0%, #fff9c2 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.25px;
+      max-width: 860px;
+    }
+
+    /* progress bar */
+    .progress {
+      width: 100%;
+      max-width: 860px;
+      height: 2px;
+      background: rgba(240,188,0,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--gold);
+      width: 0%;
+    }
+
+    /* stage */
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .img-wrap {
+      flex: 1;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    #slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .nav-btn {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      background: rgba(240,188,0,0.10);
+      border: 1px solid rgba(240,188,0,0.28);
+      border-radius: 50%;
+      color: var(--gold);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.18s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .nav-btn:hover { background: rgba(240,188,0,0.24); }
+
+    /* caption */
+    .caption {
+      width: 100%;
+      max-width: 860px;
+      padding: 10px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+    }
+    #caption-text { font-size: 15px; font-weight: 500; }
+    #credit-text  { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+
+    /* dots + counter */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dots { display: flex; gap: 7px; align-items: center; }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: none;
+      background: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.18s, transform 0.18s;
+    }
+    .dot.active { background: var(--gold); transform: scale(1.45); }
+    .dot.hidden { display: none; }
+
+    .counter { font-size: 12px; color: var(--muted); min-width: 48px; text-align: center; }
+
+    /* fallback message when all images fail */
+    #fallback {
+      display: none;
+      padding: 32px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  <!-- TODO(implementer): slideshow markup, styles, slide data, and controls -->
+<div id="app">
+  <h1>Bosnia &amp; Herzegovina at the FIFA World Cup 2026</h1>
+
+  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+
+  <div class="stage" id="stage">
+    <button class="nav-btn" id="prev" aria-label="Previous slide">&#8592;</button>
+    <div class="img-wrap" id="img-wrap">
+      <img id="slide-img" src="" alt="" onerror="onImgError()">
+      <div id="fallback">Could not load any images.<br>Check your network connection.</div>
+    </div>
+    <button class="nav-btn" id="next" aria-label="Next slide">&#8594;</button>
+  </div>
+
+  <div class="caption">
+    <div id="caption-text"></div>
+    <div id="credit-text"></div>
+  </div>
+
+  <div class="controls">
+    <div class="dots" id="dots"></div>
+    <span class="counter" id="counter"></span>
+  </div>
+</div>
+
+<script>
+const INTERVAL = 5000; // ms between auto-advances
+
+const slides = [
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/5/55/2026_world_cup.png',
+    alt: '2026 FIFA World Cup',
+    caption: 'Bosnia & Herzegovina Makes History at the FIFA World Cup 2026',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/b/bf/Flag_of_Bosnia_and_Herzegovina.svg',
+    alt: 'Flag of Bosnia and Herzegovina',
+    caption: 'The Blue & Gold — the national flag of Bosnia & Herzegovina',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Bosnia_and_Herzegovina_national_football_team%2C_BiH-Poland%2C_2020.09.07_%28cropped%29.jpg',
+    alt: 'Bosnia and Herzegovina national football team vs Poland, September 2020',
+    caption: 'The Zmajevi (Dragons) — BiH\'s national team in qualifying action (2020)',
+    credit: 'Wikimedia Commons / CC BY-SA 4.0'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Edin_Dzeko_at_Interview_%282020%29.png',
+    alt: 'Edin Džeko at interview, 2020',
+    caption: 'Edin Džeko — Bosnia & Herzegovina\'s all-time record goalscorer',
+    credit: 'Wikimedia Commons / CC BY-SA 4.0'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/20150331_2026_AUT_BIH_2177_Edin_D%C5%BEeko_%28cropped%29.jpg',
+    alt: 'Edin Džeko in action, Austria vs Bosnia and Herzegovina, 31 March 2015',
+    caption: 'Džeko at full power — Austria vs. Bosnia & Herzegovina, 2015',
+    credit: 'Wikimedia Commons / CC BY-SA 3.0 AT'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/1/12/Edin_D%C5%BEeko_-_cropped.jpg',
+    alt: 'Edin Džeko portrait',
+    caption: 'Edin Džeko — captain, leader, and the face of Bosnian football',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/0/0f/Miralem_Pjanic.jpg',
+    alt: 'Miralem Pjanić',
+    caption: 'Miralem Pjanić — midfield maestro and BiH national team stalwart',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Bosnia_Soccer_Fans_at_King_Baudouin_Stadium_Brussels.jpg',
+    alt: 'Bosnia soccer fans at King Baudouin Stadium, Brussels',
+    caption: 'The Dragon Army — passionate BiH supporters at King Baudouin Stadium, Brussels',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Bosnia_and_Herzegovina_FA_Training_Centre.jpg',
+    alt: 'Football Association of Bosnia and Herzegovina Training Centre',
+    caption: 'Football Association of Bosnia & Herzegovina Training Centre',
+    credit: 'Wikimedia Commons / CC BY-SA 4.0'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/7/7f/Bosnia_and_Herzegovina_national_football_team_in_2002.jpg',
+    alt: 'Bosnia and Herzegovina national football team, 2002',
+    caption: 'Roots of the Dream — BiH\'s national team in 2002, building toward glory',
+    credit: 'Wikimedia Commons'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/0/01/FIFA_World_Ranking_Evolution_for_Bosnia_and_Herzegovina_national_football_team.jpeg',
+    alt: 'FIFA World Ranking evolution for Bosnia and Herzegovina national football team',
+    caption: 'The Rise — Bosnia & Herzegovina\'s FIFA World Ranking through the decades',
+    credit: 'Wikimedia Commons / CC BY-SA 4.0'
+  }
+];
+
+const broken = new Set();
+let current = 0;
+let timer = null;
+
+const imgEl      = document.getElementById('slide-img');
+const captionEl  = document.getElementById('caption-text');
+const creditEl   = document.getElementById('credit-text');
+const counterEl  = document.getElementById('counter');
+const progressBar = document.getElementById('progress-bar');
+const fallbackEl = document.getElementById('fallback');
+const dotsEl     = document.getElementById('dots');
+
+// build dot buttons
+slides.forEach((_, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'dot';
+  btn.setAttribute('aria-label', `Go to slide ${i + 1}`);
+  btn.addEventListener('click', () => { stopAuto(); showSlide(i, 0); startAuto(); });
+  dotsEl.appendChild(btn);
+});
+
+function dots() { return Array.from(dotsEl.querySelectorAll('.dot')); }
+
+function updateUI() {
+  const validTotal = slides.length - broken.size;
+  const validIdx   = slides.slice(0, current + 1).filter((_, i) => !broken.has(i)).length;
+  counterEl.textContent = validTotal > 0 ? `${validIdx} / ${validTotal}` : '';
+  dots().forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+    d.classList.toggle('hidden', broken.has(i));
+  });
+}
+
+// step: +1 forward, -1 backward, 0 exact (dot click)
+function showSlide(n, step) {
+  const len = slides.length;
+  let idx = ((n % len) + len) % len;
+
+  if (step === 0) {
+    // dot click — if this exact slide is broken, go forward
+    step = 1;
+  }
+  for (let tries = 0; tries < len; tries++) {
+    if (!broken.has(idx)) break;
+    idx = ((idx + step) % len + len) % len;
+  }
+  if (broken.size === len) {
+    // all images failed
+    imgEl.style.display = 'none';
+    fallbackEl.style.display = '';
+    return;
+  }
+
+  current = idx;
+  imgEl.src = slides[current].src;
+  imgEl.alt = slides[current].alt;
+  captionEl.textContent = slides[current].caption;
+  creditEl.textContent  = slides[current].credit;
+  updateUI();
+}
+
+function onImgError() {
+  broken.add(current);
+  showSlide(current + 1, 1);
+}
+
+function resetProgress() {
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  void progressBar.offsetWidth; // force reflow
+  progressBar.style.transition = `width ${INTERVAL}ms linear`;
+  progressBar.style.width = '100%';
+}
+
+function startAuto() {
+  if (timer !== null) return;
+  timer = setInterval(() => showSlide(current + 1, 1), INTERVAL);
+  resetProgress();
+}
+
+function stopAuto() {
+  clearInterval(timer);
+  timer = null;
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+}
+
+document.getElementById('prev').addEventListener('click', () => { stopAuto(); showSlide(current - 1, -1); startAuto(); });
+document.getElementById('next').addEventListener('click', () => { stopAuto(); showSlide(current + 1,  1); startAuto(); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  { stopAuto(); showSlide(current - 1, -1); startAuto(); }
+  if (e.key === 'ArrowRight') { stopAuto(); showSlide(current + 1,  1); startAuto(); }
+});
+
+// pause auto-advance while the user hovers over the stage
+const stage = document.getElementById('stage');
+stage.addEventListener('mouseenter', stopAuto);
+stage.addEventListener('mouseleave', startAuto);
+
+// start
+showSlide(0, 1);
+startAuto();
+</script>
 </body>
 </html>
