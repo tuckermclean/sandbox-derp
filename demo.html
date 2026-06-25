@@ -1,0 +1,350 @@
+<!doctype html>
+<!-- agent: single-file interactive generative-art demo for issue #47 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Aurora — single-file demo</title>
+<style>
+  :root {
+    --bg: #05060e;
+    --fg: #eef1ff;
+    --muted: #8b91b5;
+    --glass: rgba(18, 22, 44, 0.55);
+    --border: rgba(140, 150, 220, 0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; position: fixed; inset: 0; touch-action: none; cursor: crosshair; }
+
+  .panel {
+    position: fixed;
+    top: 18px; left: 18px;
+    max-width: min(330px, calc(100vw - 36px));
+    padding: 18px 20px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+    user-select: none;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s;
+  }
+  .panel.hidden { transform: translateX(-115%); opacity: 0; pointer-events: none; }
+
+  .title {
+    font-size: 19px; font-weight: 700; letter-spacing: .2px;
+    background: linear-gradient(92deg, #7af8ff, #9d7bff 55%, #ff7ad9);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+  .row { margin-top: 16px; }
+  .row label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 7px; }
+  .row label b { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 4px;
+    background: linear-gradient(90deg, #7af8ff, #9d7bff, #ff7ad9);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 2px solid #9d7bff;
+    box-shadow: 0 0 10px rgba(157,123,255,.7); cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 2px solid #9d7bff; cursor: pointer;
+  }
+
+  .btns { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  button {
+    flex: 1; min-width: 88px;
+    padding: 9px 10px; font: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--fg); background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: rgba(255,255,255,0.13); }
+  button:active { transform: scale(.97); }
+
+  .hint {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    color: var(--muted); font-size: 12px; letter-spacing: .3px;
+    pointer-events: none; text-align: center; width: 100%;
+    text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  }
+  .toggle {
+    position: fixed; top: 18px; right: 18px;
+    width: 42px; height: 42px; border-radius: 12px;
+    display: grid; place-items: center; font-size: 18px;
+    background: var(--glass); border: 1px solid var(--border);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    cursor: pointer; user-select: none;
+  }
+  .fps {
+    position: fixed; top: 70px; right: 18px;
+    font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+    text-align: right; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="panel" id="panel">
+  <div class="title">Aurora Field</div>
+  <div class="sub">A living particle flow-field. Move or drag to stir it. One file, no dependencies.</div>
+
+  <div class="row">
+    <label>Particles <b id="vCount">700</b></label>
+    <input type="range" id="count" min="120" max="2000" step="20" value="700">
+  </div>
+  <div class="row">
+    <label>Flow speed <b id="vSpeed">1.0×</b></label>
+    <input type="range" id="speed" min="20" max="260" step="5" value="100">
+  </div>
+  <div class="row">
+    <label>Trail length <b id="vTrail">soft</b></label>
+    <input type="range" id="trail" min="2" max="40" step="1" value="9">
+  </div>
+
+  <div class="btns">
+    <button id="palette">Palette</button>
+    <button id="burst">Burst ✦</button>
+    <button id="pause">Pause</button>
+  </div>
+</div>
+
+<div class="toggle" id="toggle" title="Show / hide controls">☰</div>
+<div class="fps" id="fps"></div>
+<div class="hint">Move the cursor to bend the field · click to burst · tap ☰ to hide controls</div>
+
+<script>
+(() => {
+  "use strict";
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d", { alpha: false });
+
+  // ---- Color palettes (hue ranges) ----
+  const palettes = [
+    { name: "aurora",  a: 160, b: 280 },
+    { name: "ember",   a: -20, b: 60  },
+    { name: "ocean",   a: 180, b: 230 },
+    { name: "magenta", a: 280, b: 340 },
+    { name: "spectrum",a: 0,   b: 360 },
+  ];
+  let paletteIdx = 0;
+
+  // ---- State ----
+  const state = {
+    count: 700,
+    speed: 1.0,
+    trail: 9,        // higher = shorter trail (more fade per frame)
+    paused: false,
+  };
+
+  let W = 0, H = 0, DPR = 1;
+  let particles = [];
+  const pointer = { x: -9999, y: -9999, active: false };
+  let t = 0;
+
+  // ---- Simplex-ish value noise for the flow field (self-contained) ----
+  // Deterministic hashed gradient noise, smoothed — gives organic curl motion.
+  const perm = new Uint8Array(512);
+  (() => {
+    const p = Array.from({ length: 256 }, (_, i) => i);
+    let seed = 1337;
+    const rng = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+    for (let i = 255; i > 0; i--) { const j = (rng() * (i + 1)) | 0; [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  })();
+  const fade = u => u * u * u * (u * (u * 6 - 15) + 10);
+  const lerp = (a, b, u) => a + (b - a) * u;
+  function grad(h, x, y) {
+    switch (h & 3) { case 0: return  x + y; case 1: return -x + y; case 2: return x - y; default: return -x - y; }
+  }
+  function noise(x, y) {
+    const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+    const xf = x - Math.floor(x), yf = y - Math.floor(y);
+    const u = fade(xf), v = fade(yf);
+    const aa = perm[perm[xi] + yi], ab = perm[perm[xi] + yi + 1];
+    const ba = perm[perm[xi + 1] + yi], bb = perm[perm[xi + 1] + yi + 1];
+    const x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1, yf), u);
+    const x2 = lerp(grad(ab, xf, yf - 1), grad(bb, xf - 1, yf - 1), u);
+    return lerp(x1, x2, v); // ~[-1,1]
+  }
+
+  // ---- Particles ----
+  function makeParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: 0, vy: 0,
+      life: Math.random(),
+      hue: Math.random(),
+    };
+  }
+  function reseed(n) {
+    particles = Array.from({ length: n }, makeParticle);
+  }
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = "#05060e";
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ---- Render loop ----
+  const SCALE = 0.0016;   // spatial frequency of the field
+  let lastFps = performance.now(), frames = 0;
+  const fpsEl = document.getElementById("fps");
+
+  function step() {
+    if (!state.paused) {
+      t += 0.0015 * state.speed;
+
+      // Fade previous frame to create trails. trail slider -> fade amount.
+      const fadeAlpha = state.trail / 255;
+      ctx.fillStyle = `rgba(5,6,14,${fadeAlpha})`;
+      ctx.fillRect(0, 0, W, H);
+
+      const pal = palettes[paletteIdx];
+      ctx.globalCompositeOperation = "lighter";
+      const sp = state.speed;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        // Flow-field angle from noise.
+        const angle = noise(p.x * SCALE, p.y * SCALE + t) * Math.PI * 3;
+        let ax = Math.cos(angle), ay = Math.sin(angle);
+
+        // Pointer interaction: swirl + push nearby particles.
+        if (pointer.active) {
+          const dx = p.x - pointer.x, dy = p.y - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 38000) {
+            const d = Math.sqrt(d2) + 0.001;
+            const f = (1 - d / 195) * 2.4;
+            ax += (-dy / d) * f + (dx / d) * f * 0.35; // tangential swirl + slight push
+            ay += (dx / d) * f + (dy / d) * f * 0.35;
+          }
+        }
+
+        p.vx = p.vx * 0.86 + ax * 0.32 * sp;
+        p.vy = p.vy * 0.86 + ay * 0.32 * sp;
+        const px = p.x, py = p.y;
+        p.x += p.vx; p.y += p.vy;
+
+        // Color: palette hue band drifting with the particle's seed and life.
+        const hue = pal.a + (pal.b - pal.a) * ((p.hue + t * 0.05) % 1);
+        const spd = Math.min(1, Math.hypot(p.vx, p.vy) / 4);
+        ctx.strokeStyle = `hsla(${hue}, 95%, ${55 + spd * 25}%, 0.55)`;
+        ctx.lineWidth = 0.6 + spd * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        // Respawn on edges or when life runs out (keeps the field fresh).
+        p.life -= 0.0025;
+        if (p.life <= 0 || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
+          Object.assign(p, makeParticle());
+          if (Math.random() < 0.5) { p.x = Math.random() * W; p.y = Math.random() * H; }
+        }
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    frames++;
+    const now = performance.now();
+    if (now - lastFps > 500) {
+      fpsEl.textContent = Math.round((frames * 1000) / (now - lastFps)) + " fps · " + particles.length + " particles";
+      frames = 0; lastFps = now;
+    }
+    requestAnimationFrame(step);
+  }
+
+  function burst(x, y) {
+    const cx = x ?? W / 2, cy = y ?? H / 2;
+    const n = Math.min(220, Math.floor(particles.length * 0.25));
+    for (let i = 0; i < n; i++) {
+      const p = particles[(Math.random() * particles.length) | 0];
+      const a = Math.random() * Math.PI * 2, s = 4 + Math.random() * 9;
+      p.x = cx; p.y = cy;
+      p.vx = Math.cos(a) * s; p.vy = Math.sin(a) * s;
+      p.life = 1;
+    }
+  }
+
+  // ---- Pointer / touch ----
+  function setPointer(e) {
+    const pt = e.touches ? e.touches[0] : e;
+    if (!pt) return;
+    pointer.x = pt.clientX; pointer.y = pt.clientY; pointer.active = true;
+  }
+  canvas.addEventListener("mousemove", setPointer);
+  canvas.addEventListener("mouseleave", () => { pointer.active = false; });
+  canvas.addEventListener("mousedown", e => { setPointer(e); burst(e.clientX, e.clientY); });
+  canvas.addEventListener("touchstart", e => { e.preventDefault(); setPointer(e); const p = e.touches[0]; if (p) burst(p.clientX, p.clientY); }, { passive: false });
+  canvas.addEventListener("touchmove", e => { e.preventDefault(); setPointer(e); }, { passive: false });
+  canvas.addEventListener("touchend", () => { pointer.active = false; });
+
+  // ---- Controls ----
+  const $ = id => document.getElementById(id);
+  $("count").addEventListener("input", e => {
+    state.count = +e.target.value; $("vCount").textContent = state.count;
+    if (state.count > particles.length) {
+      while (particles.length < state.count) particles.push(makeParticle());
+    } else {
+      particles.length = state.count;
+    }
+  });
+  $("speed").addEventListener("input", e => {
+    state.speed = +e.target.value / 100; $("vSpeed").textContent = state.speed.toFixed(1) + "×";
+  });
+  $("trail").addEventListener("input", e => {
+    state.trail = +e.target.value;
+    $("vTrail").textContent = state.trail < 8 ? "long" : state.trail < 20 ? "soft" : "short";
+  });
+  $("palette").addEventListener("click", () => {
+    paletteIdx = (paletteIdx + 1) % palettes.length;
+    $("palette").textContent = "Palette: " + palettes[paletteIdx].name;
+  });
+  $("burst").addEventListener("click", () => burst());
+  $("pause").addEventListener("click", () => {
+    state.paused = !state.paused;
+    $("pause").textContent = state.paused ? "Play" : "Pause";
+  });
+  $("toggle").addEventListener("click", () => $("panel").classList.toggle("hidden"));
+
+  window.addEventListener("resize", resize);
+
+  // ---- Boot ----
+  resize();
+  reseed(state.count);
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
