@@ -205,12 +205,28 @@ const SLIDES = [
     src: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Stadion_Grbavica_July_2022.jpg',
     caption: 'Grbavica Stadium, Sarajevo — one of the iconic venues for Bosnian football.',
     alt: 'Grbavica Stadium, Sarajevo'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Stadion_Asim_Ferhatovi%C4%87_Hase.JPG/960px-Stadion_Asim_Ferhatovi%C4%87_Hase.JPG',
+    caption: 'Asim Ferhatović "Hase" Stadium, Sarajevo — Bosnia & Herzegovina\'s national stadium.',
+    alt: 'Asim Ferhatović Hase Stadium'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/20150331_2202_AUT_BIH_2609_Vedad_Ibi%C5%A1evi%C4%87.jpg/330px-20150331_2202_AUT_BIH_2609_Vedad_Ibi%C5%A1evi%C4%87.jpg',
+    caption: 'Vedad Ibišević — Former captain and prolific scorer, Bosnia & Herzegovina\'s national hero.',
+    alt: 'Vedad Ibišević'
+  },
+  {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Zvjezdan_Misimovi%C4%87_penalty_kick_vs_Greece.jpg/330px-Zvjezdan_Misimovi%C4%87_penalty_kick_vs_Greece.jpg',
+    caption: 'Zvjezdan Misimović — Former captain and key midfielder, one of Bosnia\'s finest.',
+    alt: 'Zvjezdan Misimović'
   }
 ];
 
 const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#002395"/><circle cx="50" cy="50" r="35" fill="#FCDD09"/></svg>')}`;
 
 const ALLOWED_IMG_ORIGIN = 'upload.wikimedia.org';
+// Validates only the static SLIDES array — any future dynamic data-entry point (URL params, localStorage) must also call isSafeImgSrc before using the URL.
 function isSafeImgSrc(url) {
   try {
     const parsed = new URL(url);
@@ -245,6 +261,7 @@ const slideEls = SLIDES.map((s, i) => {
     this.onerror = null;
     this.src = PLACEHOLDER_SVG;
     this.alt = 'Image unavailable';
+    this.style.display = 'none';
   };
 
   const cap = document.createElement('div');
