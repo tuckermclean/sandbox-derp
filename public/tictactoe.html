@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic-Tac-Toe</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #f4f4f4;
+  }
+  h1 {
+    margin-bottom: 8px;
+  }
+  #status {
+    font-size: 1.2rem;
+    margin: 16px 0;
+    min-height: 1.5em;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 4px;
+  }
+  .cell {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid #333;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cell:disabled {
+    cursor: default;
+    background: #e9e9e9;
+  }
+  button#reset {
+    margin-top: 20px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>Tic-Tac-Toe</h1>
+  <div id="status">X's turn</div>
+  <div id="board"></div>
+  <button id="reset" type="button">New game</button>
+
+<script>
+(function () {
+  'use strict';
+
+  var LINES = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  function calculateWinner(squares) {
+    for (var i = 0; i < LINES.length; i++) {
+      var line = LINES[i];
+      var mark = squares[line[0]];
+      if (mark && mark === squares[line[1]] && mark === squares[line[2]]) {
+        return mark;
+      }
+    }
+    return null;
+  }
+
+  var board = document.getElementById('board');
+  var statusEl = document.getElementById('status');
+  var resetBtn = document.getElementById('reset');
+  var squares = Array(9).fill(null);
+  var xIsNext = true;
+  var cells = [];
+
+  function render() {
+    var winner = calculateWinner(squares);
+    var draw = !winner && squares.every(function (s) { return s !== null; });
+    for (var i = 0; i < 9; i++) {
+      cells[i].textContent = squares[i] || '';
+      cells[i].disabled = squares[i] !== null || winner !== null;
+    }
+    if (winner) {
+      statusEl.textContent = 'Winner: ' + winner;
+    } else if (draw) {
+      statusEl.textContent = 'Draw';
+    } else {
+      statusEl.textContent = (xIsNext ? 'X' : 'O') + "'s turn";
+    }
+  }
+
+  function handleClick(i) {
+    var winner = calculateWinner(squares);
+    if (winner !== null || squares[i] !== null) {
+      return;
+    }
+    squares[i] = xIsNext ? 'X' : 'O';
+    xIsNext = !xIsNext;
+    render();
+  }
+
+  function newGame() {
+    squares = Array(9).fill(null);
+    xIsNext = true;
+    render();
+  }
+
+  for (var i = 0; i < 9; i++) {
+    (function (index) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.addEventListener('click', function () {
+        handleClick(index);
+      });
+      board.appendChild(cell);
+      cells.push(cell);
+    })(i);
+  }
+
+  resetBtn.addEventListener('click', newGame);
+  render();
+})();
+</script>
+</body>
+</html>
