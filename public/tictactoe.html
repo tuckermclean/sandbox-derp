@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic-Tac-Toe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #f4f4f8;
+    color: #222;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 0.25rem; }
+  #status {
+    font-size: 1.1rem;
+    margin: 0.5rem 0 1rem;
+    min-height: 1.4rem;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 6rem);
+    grid-template-rows: repeat(3, 6rem);
+    gap: 0.4rem;
+  }
+  .cell {
+    width: 6rem;
+    height: 6rem;
+    font-size: 2.6rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .cell:disabled {
+    cursor: default;
+    color: #333;
+  }
+  #newGame {
+    margin-top: 1.25rem;
+    padding: 0.6rem 1.6rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #2f6fdb;
+    color: #fff;
+    cursor: pointer;
+  }
+  #newGame:hover { background: #275db8; }
+</style>
+</head>
+<body>
+  <h1>Tic-Tac-Toe</h1>
+  <p id="status">X's turn</p>
+  <div id="board" aria-label="Tic-Tac-Toe board"></div>
+  <button id="newGame" type="button">New game</button>
+
+<script>
+  var LINES = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+
+  function calculateWinner(squares) {
+    for (var i = 0; i < LINES.length; i++) {
+      var a = LINES[i][0], b = LINES[i][1], c = LINES[i][2];
+      var mark = squares[a];
+      if (mark && mark === squares[b] && mark === squares[c]) {
+        return mark;
+      }
+    }
+    return null;
+  }
+
+  var board = document.getElementById('board');
+  var statusEl = document.getElementById('status');
+  var newGameBtn = document.getElementById('newGame');
+
+  var squares = new Array(9).fill(null);
+  var xIsNext = true;
+  var cells = [];
+
+  function renderStatus() {
+    var winner = calculateWinner(squares);
+    if (winner) {
+      statusEl.textContent = winner + " wins!";
+    } else if (squares.indexOf(null) === -1) {
+      statusEl.textContent = "Draw";
+    } else {
+      statusEl.textContent = (xIsNext ? "X" : "O") + "'s turn";
+    }
+  }
+
+  function updateCells() {
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].textContent = squares[i] || "";
+      cells[i].disabled = squares[i] !== null || calculateWinner(squares) !== null;
+    }
+  }
+
+  function handleClick(i) {
+    if (squares[i] !== null) return;
+    if (calculateWinner(squares) !== null) return;
+    squares[i] = xIsNext ? 'X' : 'O';
+    xIsNext = !xIsNext;
+    updateCells();
+    renderStatus();
+  }
+
+  function newGame() {
+    squares = new Array(9).fill(null);
+    xIsNext = true;
+    updateCells();
+    renderStatus();
+  }
+
+  for (var i = 0; i < 9; i++) {
+    (function (index) {
+      var cell = document.createElement('button');
+      cell.className = 'cell';
+      cell.setAttribute('aria-label', 'Cell ' + (index + 1));
+      cell.addEventListener('click', function () {
+        handleClick(index);
+      });
+      board.appendChild(cell);
+      cells.push(cell);
+    })(i);
+  }
+
+  newGameBtn.addEventListener('click', newGame);
+  newGame();
+</script>
+</body>
+</html>
