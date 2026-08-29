@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tip Calculator</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f4f5f7;
+    color: #1f2933;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+    width: 340px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 24px;
+  }
+  .field {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  input[type="number"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #cbd2d9;
+    border-radius: 8px;
+  }
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .presets button {
+    padding: 10px 0;
+    font-size: 15px;
+    border: 1px solid #cbd2d9;
+    border-radius: 8px;
+    background: #f0f4f8;
+    cursor: pointer;
+  }
+  .presets button.active {
+    background: #0b7285;
+    color: #fff;
+    border-color: #0b7285;
+  }
+  .results {
+    border-top: 1px solid #e4e7eb;
+    padding-top: 16px;
+    margin-top: 8px;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 16px;
+  }
+  .result-row .value {
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Tip Calculator</h1>
+
+    <div class="field">
+      <label for="bill">Bill amount</label>
+      <input id="bill" type="number" min="0" step="0.01" placeholder="0.00" value="">
+    </div>
+
+    <div class="field">
+      <label>Tip percentage</label>
+      <div class="presets" id="presets">
+        <button type="button" data-tip="10">10%</button>
+        <button type="button" data-tip="15">15%</button>
+        <button type="button" data-tip="20" class="active">20%</button>
+        <button type="button" data-tip="25">25%</button>
+      </div>
+      <input id="tip" type="number" min="0" step="1" placeholder="Custom %" value="20">
+    </div>
+
+    <div class="field">
+      <label for="people">Number of people</label>
+      <input id="people" type="number" min="1" step="1" placeholder="1" value="1">
+    </div>
+
+    <div class="results">
+      <div class="result-row"><span>Tip amount</span><span class="value" id="tipAmount">$0.00</span></div>
+      <div class="result-row"><span>Total</span><span class="value" id="total">$0.00</span></div>
+      <div class="result-row"><span>Per person</span><span class="value" id="perPerson">$0.00</span></div>
+    </div>
+  </div>
+
+  <script>
+    // Same formula as src/tip.js - keep both in sync.
+    function calculateTip(bill, tipPercent, people) {
+      var tipAmount = (bill * tipPercent) / 100;
+      var total = bill + tipAmount;
+      var perPerson = total / people;
+      return { tipAmount: tipAmount, total: total, perPerson: perPerson };
+    }
+
+    var billInput = document.getElementById('bill');
+    var tipInput = document.getElementById('tip');
+    var peopleInput = document.getElementById('people');
+    var presetButtons = Array.prototype.slice.call(document.querySelectorAll('#presets button'));
+
+    function formatMoney(value) {
+      return '$' + value.toFixed(2);
+    }
+
+    function recalc() {
+      var bill = parseFloat(billInput.value) || 0;
+      var tipPercent = parseFloat(tipInput.value) || 0;
+      var people = parseInt(peopleInput.value, 10) || 1;
+
+      var result = calculateTip(bill, tipPercent, people);
+
+      document.getElementById('tipAmount').textContent = formatMoney(result.tipAmount);
+      document.getElementById('total').textContent = formatMoney(result.total);
+      document.getElementById('perPerson').textContent = formatMoney(result.perPerson);
+    }
+
+    presetButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        presetButtons.forEach(function (b) { b.classList.remove('active'); });
+        button.classList.add('active');
+        tipInput.value = button.getAttribute('data-tip');
+        recalc();
+      });
+    });
+
+    tipInput.addEventListener('input', function () {
+      presetButtons.forEach(function (b) { b.classList.remove('active'); });
+      recalc();
+    });
+
+    billInput.addEventListener('input', recalc);
+    peopleInput.addEventListener('input', recalc);
+
+    recalc();
+  </script>
+</body>
+</html>
