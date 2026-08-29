@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tip Calculator</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #f4f6f8;
+    }
+    .card {
+      width: min(24rem, 100% - 2rem);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 1.5rem;
+    }
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 1.25rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 1rem 0 0.35rem;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #cbd2d9;
+      border-radius: 8px;
+    }
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    .presets button {
+      padding: 0.6rem 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid #cbd2d9;
+      border-radius: 8px;
+      background: #eef1f4;
+      cursor: pointer;
+    }
+    .presets button.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .results {
+      margin-top: 1.5rem;
+      border-top: 1px solid #e2e6ea;
+      padding-top: 0.75rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+    }
+    .result-row .value {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Tip Calculator</h1>
+
+    <label for="bill">Bill amount</label>
+    <input type="number" id="bill" min="0" step="0.01" value="0" inputmode="decimal" />
+
+    <label>Tip percentage</label>
+    <div class="presets" id="presets">
+      <button type="button" data-tip="10">10%</button>
+      <button type="button" data-tip="15">15%</button>
+      <button type="button" data-tip="20" class="active">20%</button>
+      <button type="button" data-tip="25">25%</button>
+    </div>
+    <label for="custom-tip">Custom tip %</label>
+    <input type="number" id="custom-tip" min="0" step="0.01" value="20" inputmode="decimal" />
+
+    <label for="people">Number of people</label>
+    <input type="number" id="people" min="1" step="1" value="1" inputmode="numeric" />
+
+    <div class="results">
+      <div class="result-row"><span>Tip amount</span><span class="value" id="tip-amount">$0.00</span></div>
+      <div class="result-row"><span>Total</span><span class="value" id="total">$0.00</span></div>
+      <div class="result-row"><span>Per person</span><span class="value" id="per-person">$0.00</span></div>
+    </div>
+  </main>
+
+  <script>
+    var billInput = document.getElementById("bill");
+    var customTipInput = document.getElementById("custom-tip");
+    var peopleInput = document.getElementById("people");
+    var presetButtons = document.querySelectorAll("#presets button");
+    var tipAmountOutput = document.getElementById("tip-amount");
+    var totalOutput = document.getElementById("total");
+    var perPersonOutput = document.getElementById("per-person");
+
+    function calculateTip(bill, tipPercent, people) {
+      const tipAmount = (bill * tipPercent) / 100;
+      const total = bill + tipAmount;
+      const perPerson = total / people;
+      return { tipAmount, total, perPerson };
+    }
+
+    function formatMoney(value) {
+      return "$" + value.toFixed(2);
+    }
+
+    function update() {
+      const bill = parseFloat(billInput.value) || 0;
+      const tipPercent = parseFloat(customTipInput.value) || 0;
+      const people = parseInt(peopleInput.value, 10) || 1;
+      const result = calculateTip(bill, tipPercent, people);
+      tipAmountOutput.textContent = formatMoney(result.tipAmount);
+      totalOutput.textContent = formatMoney(result.total);
+      perPersonOutput.textContent = formatMoney(result.perPerson);
+    }
+
+    function selectPreset(event) {
+      const percent = event.currentTarget.dataset.tip;
+      customTipInput.value = percent;
+      presetButtons.forEach(function (button) {
+        button.classList.toggle("active", button === event.currentTarget);
+      });
+      update();
+    }
+
+    presetButtons.forEach(function (button) {
+      button.addEventListener("click", selectPreset);
+    });
+
+    billInput.addEventListener("input", update);
+    customTipInput.addEventListener("input", function () {
+      presetButtons.forEach(function (button) {
+        button.classList.toggle(
+          "active",
+          parseFloat(customTipInput.value) === parseFloat(button.dataset.tip)
+        );
+      });
+      update();
+    });
+    peopleInput.addEventListener("input", update);
+
+    update();
+  </script>
+</body>
+</html>
