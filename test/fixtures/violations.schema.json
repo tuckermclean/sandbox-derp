@@ -1,0 +1,4 @@
+{
+  "age": { "type": "number", "range": [0, 130] },
+  "name": { "required": true, "minLength": 3 }
+}

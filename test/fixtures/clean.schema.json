@@ -1,0 +1,3 @@
+{
+  "age": { "type": "number", "range": [0, 130] }
+}
