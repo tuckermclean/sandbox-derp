@@ -1,0 +1,539 @@
+<!doctype html>
+<!-- agent: single-page productivity dashboard for card-b619c41d -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Productivity Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #171b2e;
+    --panel-2: #1e2340;
+    --fg: #e8ecff;
+    --muted: #9aa2c7;
+    --accent: #6c8cff;
+    --accent-2: #9d7bff;
+    --ok: #5fd68a;
+    --warn: #ffb454;
+    --err: #ff6b7a;
+    --border: #2a3152;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 24px 20px 48px;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 4px;
+    background: linear-gradient(92deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 13px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  .panel h2 {
+    margin: 0;
+    font-size: 15px;
+    letter-spacing: .3px;
+    color: #c6cdf5;
+  }
+  .panel h2 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row.wrap { flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 0; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    outline: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 120px; }
+  button {
+    background: var(--panel-2);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font: inherit;
+    cursor: pointer;
+    transition: background .15s, transform .05s;
+    white-space: nowrap;
+  }
+  button:hover { background: #26305a; }
+  button:active { transform: scale(.97); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0b0e1f; font-weight: 600; }
+  button.primary:hover { background: #7f9bff; }
+  button.danger:hover { background: #4a2630; border-color: var(--err); color: var(--err); }
+  .count { color: var(--muted); font-size: 13px; }
+  .badge { font-size: 12px; color: var(--muted); }
+
+  .todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .todo-list li {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px 6px 10px;
+  }
+  .todo-list li.done span { text-decoration: line-through; color: var(--muted); }
+  .todo-list li span { flex: 1; min-width: 0; word-break: break-word; }
+  .todo-list input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .filters { display: flex; gap: 6px; }
+  .filters button.active { background: var(--accent); border-color: var(--accent); color: #0b0e1f; font-weight: 600; }
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 6px 0; }
+
+  .timer-display {
+    font-size: 44px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    letter-spacing: 2px;
+    padding: 12px 0 4px;
+    background: linear-gradient(92deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .timer-controls { display: flex; gap: 8px; justify-content: center; }
+  .timer-controls button { min-width: 80px; }
+
+  .calc-display {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    min-height: 48px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+  .calc-display .expr { color: var(--muted); font-size: 13px; min-height: 18px; }
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .calc-grid button { padding: 12px 0; font-size: 17px; }
+  .calc-grid button.op { color: var(--accent); font-weight: 700; }
+  .calc-grid button.equals { background: var(--accent); border-color: var(--accent); color: #0b0e1f; font-weight: 700; }
+
+  .conv-result {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 16px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+  }
+  .conv-result .invalid { color: var(--err); }
+  .units-row { display: flex; gap: 8px; align-items: center; }
+  .units-row .arrow { color: var(--muted); flex: 0 0 auto; }
+  .units-row select { min-width: 0; }
+
+  footer {
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<h1>Productivity Dashboard</h1>
+<p class="sub">Five widgets, one page. Everything stays in your browser.</p>
+
+<div class="grid">
+
+  <!-- Todo -->
+  <section class="panel" aria-label="Todo">
+    <h2>Todo <small>persisted locally</small></h2>
+    <div class="row">
+      <input type="text" id="todo-input" class="grow" placeholder="Add a task…" aria-label="New task text">
+      <button id="todo-add" class="primary">Add</button>
+    </div>
+    <div class="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="done">Done</button>
+    </div>
+    <ul class="todo-list" id="todo-list"></ul>
+    <div class="badge" id="todo-count"></div>
+  </section>
+
+  <!-- Notes -->
+  <section class="panel" aria-label="Notes">
+    <h2>Notes <small>autosaved</small></h2>
+    <textarea id="notes-textarea" placeholder="Write anything… it saves as you type." aria-label="Notepad text"></textarea>
+    <div class="count" id="notes-count">0 words</div>
+  </section>
+
+  <!-- Timer -->
+  <section class="panel" aria-label="Timer">
+    <h2>Timer <small>stopwatch</small></h2>
+    <div class="timer-display" id="timer-display">00:00:00</div>
+    <div class="timer-controls">
+      <button id="timer-toggle" class="primary">Start</button>
+      <button id="timer-reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- Calculator -->
+  <section class="panel" aria-label="Calculator">
+    <h2>Calculator <small>+ − × ÷</small></h2>
+    <div class="calc-display">
+      <div class="expr" id="calc-expr"></div>
+      <div id="calc-result">0</div>
+    </div>
+    <div class="calc-grid">
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="/" class="op">÷</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="*" class="op">×</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="-" class="op">−</button>
+      <button data-k="0">0</button><button data-k=".">.</button><button data-k="C">C</button><button data-k="+" class="op">+</button>
+      <button data-k="=" class="equals" style="grid-column: span 4;">=</button>
+    </div>
+  </section>
+
+  <!-- Converter -->
+  <section class="panel" aria-label="Converter">
+    <h2>Converter <small>length &amp; temperature</small></h2>
+    <input type="number" id="conv-value" value="1" step="any" aria-label="Value to convert">
+    <div class="units-row">
+      <select id="conv-from" aria-label="From unit"></select>
+      <span class="arrow">→</span>
+      <select id="conv-to" aria-label="To unit"></select>
+    </div>
+    <div class="conv-result" id="conv-result">—</div>
+  </section>
+
+</div>
+
+<footer>Todo, notes, and timer state persist in this browser via localStorage. No data leaves your machine.</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  // ------------------------------------------------------------------ shared
+  const $ = (id) => document.getElementById(id);
+
+  // -------------------------------------------------------------------- todo
+  // Mirrors src/todo.js
+  const addTask = (tasks, task) => [...tasks, task];
+  const toggleTask = (tasks, id) =>
+    tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+  const removeTask = (tasks, id) => tasks.filter((t) => t.id !== id);
+  const filterTasks = (tasks, filter) => {
+    if (filter === 'active') return tasks.filter((t) => !t.done);
+    if (filter === 'done') return tasks.filter((t) => t.done);
+    return tasks.slice();
+  };
+
+  const TODO_KEY = 'dashboard.todo';
+  let todoState = [];
+  let todoFilter = 'all';
+  let todoNextId = 1;
+  try { todoState = JSON.parse(localStorage.getItem(TODO_KEY)) || []; } catch (_) { todoState = []; }
+  todoState.forEach((t) => { if (t.id >= todoNextId) todoNextId = t.id + 1; });
+
+  function saveTodos() {
+    try { localStorage.setItem(TODO_KEY, JSON.stringify(todoState)); } catch (_) { /* ignore */ }
+  }
+
+  function renderTodos() {
+    const list = $('todo-list');
+    list.innerHTML = '';
+    const visible = filterTasks(todoState, todoFilter);
+    if (visible.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = 'Nothing here yet.';
+      list.appendChild(li);
+    }
+    visible.forEach((task) => {
+      const li = document.createElement('li');
+      if (task.done) li.className = 'done';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = task.done;
+      cb.addEventListener('change', () => {
+        todoState = toggleTask(todoState, task.id);
+        saveTodos();
+        renderTodos();
+      });
+      const span = document.createElement('span');
+      span.textContent = task.text;
+      const del = document.createElement('button');
+      del.className = 'danger';
+      del.textContent = '✕';
+      del.setAttribute('aria-label', 'Remove task');
+      del.addEventListener('click', () => {
+        todoState = removeTask(todoState, task.id);
+        saveTodos();
+        renderTodos();
+      });
+      li.appendChild(cb);
+      li.appendChild(span);
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+    const remaining = filterTasks(todoState, 'active').length;
+    $('todo-count').textContent = `${remaining} active · ${todoState.length} total`;
+    document.querySelectorAll('.filters button').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.filter === todoFilter);
+    });
+  }
+
+  $('todo-add').addEventListener('click', () => {
+    const input = $('todo-input');
+    const text = input.value.trim();
+    if (!text) return;
+    todoState = addTask(todoState, { id: todoNextId++, text, done: false });
+    input.value = '';
+    saveTodos();
+    renderTodos();
+    input.focus();
+  });
+  $('todo-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('todo-add').click();
+  });
+  document.querySelectorAll('.filters button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      todoFilter = btn.dataset.filter;
+      renderTodos();
+    });
+  });
+
+  // ------------------------------------------------------------------- notes
+  // Mirrors src/notes.js
+  const wordCount = (text) => {
+    if (typeof text !== 'string' || text.trim() === '') return 0;
+    return text.trim().split(/\s+/).length;
+  };
+
+  const NOTES_KEY = 'dashboard.notes';
+  const notesArea = $('notes-textarea');
+  try { notesArea.value = localStorage.getItem(NOTES_KEY) || ''; } catch (_) { /* ignore */ }
+  $('notes-count').textContent = `${wordCount(notesArea.value)} word${wordCount(notesArea.value) === 1 ? '' : 's'}`;
+
+  notesArea.addEventListener('input', () => {
+    try { localStorage.setItem(NOTES_KEY, notesArea.value); } catch (_) { /* ignore */ }
+    const n = wordCount(notesArea.value);
+    $('notes-count').textContent = `${n} word${n === 1 ? '' : 's'}`;
+  });
+
+  // ------------------------------------------------------------------- timer
+  // Mirrors src/timer.js
+  const pad = (v) => String(v).padStart(2, '0');
+  const formatDuration = (totalSeconds) => {
+    const total = Math.max(0, Math.floor(totalSeconds));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  };
+
+  const TIMER_KEY = 'dashboard.timer';
+  let timerRunning = false;
+  let timerInterval = null;
+  let timerStart = 0;
+  let timerElapsed = 0;
+  try { timerElapsed = Number(localStorage.getItem(TIMER_KEY)) || 0; } catch (_) { timerElapsed = 0; }
+
+  function renderTimer() {
+    $('timer-display').textContent = formatDuration(timerElapsed);
+    $('timer-toggle').textContent = timerRunning ? 'Pause' : 'Resume';
+  }
+  function persistTimer() {
+    try { localStorage.setItem(TIMER_KEY, String(timerElapsed)); } catch (_) { /* ignore */ }
+  }
+  function tick() {
+    timerElapsed = timerElapsed + (Date.now() - timerStart) / 1000;
+    timerStart = Date.now();
+    renderTimer();
+    persistTimer();
+  }
+  function stopTimer() {
+    if (!timerInterval) return;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerRunning = false;
+    tick();
+  }
+  $('timer-toggle').addEventListener('click', () => {
+    if (timerRunning) {
+      stopTimer();
+      return;
+    }
+    timerRunning = true;
+    timerStart = Date.now();
+    timerInterval = setInterval(tick, 250);
+    $('timer-toggle').textContent = 'Pause';
+  });
+  $('timer-reset').addEventListener('click', () => {
+    stopTimer();
+    timerElapsed = 0;
+    persistTimer();
+    renderTimer();
+    $('timer-toggle').textContent = 'Start';
+  });
+  renderTimer();
+
+  // -------------------------------------------------------------- calculator
+  // Mirrors src/calc.js
+  const applyOperation = (a, operator, b) => {
+    switch (operator) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b === 0 ? null : a / b;
+      default: return null;
+    }
+  };
+
+  const calc = { operand: null, operator: null, display: '' };
+  const OPERATOR_LABELS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+  function calcRender() {
+    const expr = calc.operand === null
+      ? calc.display
+      : `${String(calc.operand)} ${OPERATOR_LABELS[calc.operator] || calc.operator}`;
+    $('calc-expr').textContent = expr;
+    $('calc-result').textContent = calc.display === '' ? '0' : calc.display;
+  }
+  function calcReset() {
+    calc.operand = null;
+    calc.operator = null;
+    calc.display = '';
+    calcRender();
+  }
+  function calcCompute() {
+    if (calc.operand === null || calc.operator === null) return;
+    const b = parseFloat(calc.display);
+    if (Number.isNaN(b)) return;
+    const result = applyOperation(calc.operand, calc.operator, b);
+    if (result === null) {
+      calc.display = 'Cannot divide by zero';
+    } else {
+      calc.display = String(parseFloat(result.toPrecision(12)));
+      calc.operand = parseFloat(calc.display);
+      calc.operator = null;
+    }
+    $('calc-expr').textContent = '';
+    $('calc-result').textContent = calc.display;
+  }
+
+  document.querySelectorAll('.calc-grid button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.k;
+      if (k === 'C') { calcReset(); return; }
+      if (k === '=') { calcCompute(); return; }
+      if (['+', '-', '*', '/'].includes(k)) {
+        if (calc.display === '') return;
+        if (calc.operand === null) {
+          calc.operand = parseFloat(calc.display);
+        } else if (calc.operator) {
+          calcCompute();
+          if (calc.display === 'Cannot divide by zero') return;
+          calc.operand = parseFloat(calc.display);
+        }
+        calc.operator = k;
+        calc.display = '';
+        calcRender();
+        return;
+      }
+      if (calc.display === 'Cannot divide by zero') calc.display = '';
+      if (k === '.' && calc.display.includes('.')) return;
+      if (calc.display === '0' && k !== '.') calc.display = '';
+      calc.display += k;
+      calcRender();
+    });
+  });
+  calcRender();
+
+  // ---------------------------------------------------------------- converter
+  // Mirrors src/convert.js
+  const LENGTH_TO_M = { m: 1, km: 1000, cm: 0.01, ft: 0.3048 };
+  const LENGTH_UNITS = new Set(Object.keys(LENGTH_TO_M));
+  const TEMP_UNITS = new Set(['C', 'F']);
+  const toCelsius = (value, from) => (from === 'F' ? ((value - 32) * 5) / 9 : value);
+  const fromCelsius = (value, to) => (to === 'F' ? (value * 9) / 5 + 32 : value);
+  const convert = (value, from, to) => {
+    if (LENGTH_UNITS.has(from) && LENGTH_UNITS.has(to)) {
+      return (value * LENGTH_TO_M[from]) / LENGTH_TO_M[to];
+    }
+    if (TEMP_UNITS.has(from) && TEMP_UNITS.has(to)) {
+      return fromCelsius(toCelsius(value, from), to);
+    }
+    return null;
+  };
+
+  const UNIT_LABELS = { m: 'metre (m)', km: 'kilometre (km)', cm: 'centimetre (cm)', ft: 'foot (ft)', C: 'Celsius (°C)', F: 'Fahrenheit (°F)' };
+  const UNIT_ORDER = ['m', 'km', 'cm', 'ft', 'C', 'F'];
+
+  const fromSel = $('conv-from');
+  const toSel = $('conv-to');
+  UNIT_ORDER.forEach((u) => {
+    fromSel.appendChild(new Option(UNIT_LABELS[u], u));
+    toSel.appendChild(new Option(UNIT_LABELS[u], u));
+  });
+  fromSel.value = 'm';
+  toSel.value = 'km';
+
+  function convRender() {
+    const value = parseFloat($('conv-value').value);
+    const resultEl = $('conv-result');
+    if (Number.isNaN(value)) {
+      resultEl.textContent = 'Enter a value';
+      resultEl.classList.remove('invalid');
+      return;
+    }
+    const from = fromSel.value;
+    const to = toSel.value;
+    const result = convert(value, from, to);
+    if (result === null) {
+      resultEl.textContent = 'Cannot convert between different unit families';
+      resultEl.classList.add('invalid');
+      return;
+    }
+    resultEl.classList.remove('invalid');
+    const rounded = Math.round(result * 1e10) / 1e10;
+    resultEl.textContent = `${value} ${from} = ${rounded} ${to}`;
+  }
+
+  ['input', 'change'].forEach((evt) => {
+    $('conv-value').addEventListener(evt, convRender);
+    fromSel.addEventListener(evt, convRender);
+    toSel.addEventListener(evt, convRender);
+  });
+  convRender();
+
+  renderTodos();
+})();
+</script>
+</body>
+</html>
