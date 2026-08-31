@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --display-bg: #f7f9fc;
+    --text: #1c2333;
+    --text-dim: #6b7280;
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #e5e9f0;
+    --btn-border: #d3d9e2;
+    --op-bg: #e8ecf3;
+    --op-text: #2563eb;
+    --eq-bg: #2563eb;
+    --eq-text: #ffffff;
+    --mem-indicator: #b45309;
+    --history-bg: #f7f9fc;
+    --shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  }
+
+  html[data-theme="dark"] {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --display-bg: #0f172a;
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --btn-bg: #334155;
+    --btn-bg-hover: #475569;
+    --btn-border: #475569;
+    --op-bg: #1e3a5f;
+    --op-text: #93c5fd;
+    --eq-bg: #2563eb;
+    --eq-text: #ffffff;
+    --mem-indicator: #fbbf24;
+    --history-bg: #0f172a;
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    transition: background 0.2s ease;
+    padding: 24px;
+  }
+
+  .app {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 640px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .calculator {
+    flex: 1 1 320px;
+    max-width: 380px;
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .theme-toggle {
+    background: var(--btn-bg);
+    color: var(--text);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .theme-toggle:hover {
+    background: var(--btn-bg-hover);
+  }
+
+  .memory-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    min-height: 34px;
+  }
+
+  .memory-row button {
+    flex: 1;
+    background: var(--op-bg);
+    color: var(--op-text);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .memory-row button:hover {
+    background: var(--btn-bg-hover);
+  }
+
+  .memory-indicator {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mem-indicator);
+    min-width: 26px;
+    text-align: center;
+    visibility: hidden;
+  }
+
+  .memory-indicator.active {
+    visibility: visible;
+  }
+
+  .display {
+    background: var(--display-bg);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: right;
+    border: 1px solid var(--btn-border);
+    overflow: hidden;
+  }
+
+  .expression-line {
+    font-size: 13px;
+    color: var(--text-dim);
+    min-height: 18px;
+    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .current-line {
+    font-size: 34px;
+    font-weight: 600;
+    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .buttons button {
+    background: var(--btn-bg);
+    color: var(--text);
+    border: 1px solid var(--btn-border);
+    border-radius: 10px;
+    padding: 16px 0;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+
+  .buttons button:hover {
+    background: var(--btn-bg-hover);
+  }
+
+  .buttons button.operator {
+    background: var(--op-bg);
+    color: var(--op-text);
+    font-weight: 700;
+  }
+
+  .buttons button.equals {
+    background: var(--eq-bg);
+    color: var(--eq-text);
+    font-weight: 700;
+  }
+
+  .buttons button.clear,
+  .buttons button.backspace {
+    color: #dc2626;
+  }
+
+  .history {
+    flex: 1 1 260px;
+    max-width: 340px;
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .history h2 {
+    font-size: 15px;
+    margin: 0 0 10px;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .history-header h2 {
+    margin: 0;
+  }
+
+  .clear-history {
+    background: var(--op-bg);
+    color: var(--op-text);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .clear-history:hover {
+    background: var(--btn-bg-hover);
+  }
+
+  .history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--history-bg);
+    border-radius: 10px;
+    border: 1px solid var(--btn-border);
+  }
+
+  .history-list li {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--btn-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .history-list li:last-child {
+    border-bottom: none;
+  }
+
+  .history-list li:hover {
+    background: var(--btn-bg-hover);
+  }
+
+  .history-list li .entry {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .history-list li .entry-result {
+    color: var(--text-dim);
+  }
+
+  .history-empty {
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="calculator">
+      <div class="header">
+        <h1>Calculator</h1>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">Light / Dark</button>
+      </div>
+
+      <div class="memory-row">
+        <button type="button" data-action="MC">MC</button>
+        <button type="button" data-action="MR">MR</button>
+        <button type="button" data-action="M+">M+</button>
+        <button type="button" data-action="M-">M-</button>
+        <span class="memory-indicator" id="memory-indicator" title="Memory is non-zero">M</span>
+      </div>
+
+      <div class="display">
+        <div class="expression-line" id="expression-line">&nbsp;</div>
+        <div class="current-line" id="display">0</div>
+      </div>
+
+      <div class="buttons">
+        <button type="button" data-action="clear" class="clear">AC</button>
+        <button type="button" data-action="backspace" class="backspace">⌫</button>
+        <button type="button" data-action="percent" class="operator">%</button>
+        <button type="button" data-action="divide" class="operator">/</button>
+
+        <button type="button" data-action="7">7</button>
+        <button type="button" data-action="8">8</button>
+        <button type="button" data-action="9">9</button>
+        <button type="button" data-action="multiply" class="operator">*</button>
+
+        <button type="button" data-action="4">4</button>
+        <button type="button" data-action="5">5</button>
+        <button type="button" data-action="6">6</button>
+        <button type="button" data-action="subtract" class="operator">−</button>
+
+        <button type="button" data-action="1">1</button>
+        <button type="button" data-action="2">2</button>
+        <button type="button" data-action="3">3</button>
+        <button type="button" data-action="add" class="operator">+</button>
+
+        <button type="button" data-action="sign">+/−</button>
+        <button type="button" data-action="0">0</button>
+        <button type="button" data-action="decimal">.</button>
+        <button type="button" data-action="equals" class="equals">=</button>
+      </div>
+    </div>
+
+    <div class="history">
+      <div class="history-header">
+        <h2>History</h2>
+        <button type="button" class="clear-history" id="clear-history">Clear history</button>
+      </div>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- Pure logic (mirrors src/calculator.js) ----
+  function applyOperation(a, operator, b) {
+    switch (operator) {
+      case '+':
+        return a + b;
+      case '-':
+        return a - b;
+      case '*':
+        return a * b;
+      case '/':
+        return b === 0 ? null : a / b;
+      default:
+        return null;
+    }
+  }
+
+  function applyPercent(base, percent) {
+    return base * percent / 100;
+  }
+
+  function memoryReducer(memValue, action, current) {
+    switch (action) {
+      case 'MC':
+        return 0;
+      case 'MR':
+        return memValue;
+      case 'M+':
+        return memValue + current;
+      case 'M-':
+        return memValue - current;
+      default:
+        return memValue;
+    }
+  }
+
+  function pushHistory(history, entry, limit) {
+    if (limit <= 0) return [];
+    return history.concat(entry).slice(-limit);
+  }
+
+  var HISTORY_LIMIT = 10;
+  var MAX_INPUT_LENGTH = 18;
+
+  // ---- State ----
+  var current = '0';
+  var accumulator = null;
+  var pendingOp = null;
+  var justEvaluated = false;
+  var memory = 0;
+  var history = [];
+  var errorState = false;
+
+  // ---- DOM ----
+  var displayEl = document.getElementById('display');
+  var expressionEl = document.getElementById('expression-line');
+  var memoryIndicator = document.getElementById('memory-indicator');
+  var historyList = document.getElementById('history-list');
+
+  function formatNumber(n) {
+    if (!isFinite(n)) return 'Error';
+    var rounded = Math.round(n * 1e10) / 1e10;
+    return String(rounded);
+  }
+
+  function parseCurrent() {
+    return parseFloat(current);
+  }
+
+  function setDisplay(value) {
+    current = String(value);
+    displayEl.textContent = current;
+  }
+
+  function updateMemoryIndicator() {
+    memoryIndicator.classList.toggle('active', memory !== 0);
+  }
+
+  function allClear() {
+    current = '0';
+    accumulator = null;
+    pendingOp = null;
+    justEvaluated = false;
+    errorState = false;
+    displayEl.textContent = current;
+    expressionEl.innerHTML = '&nbsp;';
+  }
+
+  function inputDigit(digit) {
+    if (errorState) allClear();
+    if (justEvaluated) {
+      current = digit;
+      justEvaluated = false;
+    } else if (current === '0') {
+      current = digit;
+    } else if (current.length < MAX_INPUT_LENGTH) {
+      current += digit;
+    }
+    displayEl.textContent = current;
+  }
+
+  function inputDecimal() {
+    if (errorState) allClear();
+    if (justEvaluated) {
+      current = '0.';
+      justEvaluated = false;
+    } else if (current.indexOf('.') === -1 && current.length < MAX_INPUT_LENGTH) {
+      current += '.';
+    }
+    displayEl.textContent = current;
+  }
+
+  function backspace() {
+    if (errorState || justEvaluated) {
+      allClear();
+      return;
+    }
+    if (current.length > 1) {
+      current = current.slice(0, -1);
+    } else {
+      current = '0';
+    }
+    displayEl.textContent = current;
+  }
+
+  function setOperator(op) {
+    if (errorState) return;
+    var value = parseCurrent();
+
+    if (pendingOp !== null && accumulator !== null && !justEvaluated) {
+      var result = applyOperation(accumulator, pendingOp, value);
+      if (result === null) {
+        showError();
+        return;
+      }
+      accumulator = result;
+      expressionEl.textContent = formatNumber(accumulator) + ' ' + opSymbol(pendingOp);
+      pendingOp = op;
+    } else {
+      if (pendingOp === null) {
+        expressionEl.textContent = formatNumber(value) + ' ' + opSymbol(op);
+      } else {
+        expressionEl.textContent = formatNumber(value) + ' ' + opSymbol(op);
+      }
+      accumulator = value;
+      pendingOp = op;
+    }
+
+    displayEl.textContent = formatNumber(accumulator);
+    justEvaluated = true;
+  }
+
+  function opSymbol(op) {
+    switch (op) {
+      case 'add': return '+';
+      case 'subtract': return '\u2212';
+      case 'multiply': return '\u00d7';
+      case 'divide': return '\u00f7';
+      default: return op;
+    }
+  }
+
+  function operatorToSymbol(op) {
+    switch (op) {
+      case 'add': return '+';
+      case 'subtract': return '-';
+      case 'multiply': return '*';
+      case 'divide': return '/';
+      default: return op;
+    }
+  }
+
+  function evaluate() {
+    if (errorState) return;
+    var value = parseCurrent();
+    var expr;
+
+    if (pendingOp !== null && accumulator !== null) {
+      var result = applyOperation(accumulator, operatorToSymbol(pendingOp), value);
+      if (result === null) {
+        showError();
+        return;
+      }
+      var left = formatNumber(accumulator);
+      var symbol = operatorToSymbol(pendingOp);
+      expr = left + ' ' + symbol + ' ' + formatNumber(value) + ' = ' + formatNumber(result);
+      history = pushHistory(history, expr, HISTORY_LIMIT);
+      renderHistory();
+
+      accumulator = null;
+      pendingOp = null;
+      justEvaluated = true;
+      displayEl.textContent = formatNumber(result);
+      current = String(result);
+      expressionEl.innerHTML = '&nbsp;';
+    } else {
+      // Just a plain "=" without a pending operation: record current value.
+      expr = formatNumber(value) + ' = ' + formatNumber(value);
+      history = pushHistory(history, expr, HISTORY_LIMIT);
+      renderHistory();
+      justEvaluated = true;
+      expressionEl.innerHTML = '&nbsp;';
+    }
+  }
+
+  function showError() {
+    current = 'Error';
+    displayEl.textContent = 'Error';
+    expressionEl.textContent = 'Cannot divide by zero';
+    accumulator = null;
+    pendingOp = null;
+    justEvaluated = true;
+    errorState = true;
+  }
+
+  function inputPercent() {
+    if (errorState) return;
+    var value = parseCurrent();
+    var result = applyPercent(value, value);
+    setDisplay(formatNumber(result));
+    justEvaluated = true;
+  }
+
+  function inputSign() {
+    if (errorState) return;
+    var value = parseCurrent();
+    setDisplay(formatNumber(-value));
+  }
+
+  function loadMemory() {
+    if (errorState) allClear();
+    setDisplay(formatNumber(memory));
+    justEvaluated = true;
+  }
+
+  function handleMemory(action) {
+    if (action === 'MC') {
+      memory = memoryReducer(memory, 'MC', 0);
+    } else if (action === 'MR') {
+      if (errorState) allClear();
+      loadMemory();
+      return;
+    } else if (action === 'M+') {
+      memory = memoryReducer(memory, 'M+', parseCurrent());
+    } else if (action === 'M-') {
+      memory = memoryReducer(memory, 'M-', parseCurrent());
+    }
+    updateMemoryIndicator();
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+      var empty = document.createElement('li');
+      empty.className = 'history-empty';
+      empty.textContent = 'No calculations yet.';
+      historyList.appendChild(empty);
+      return;
+    }
+    history.forEach(function (entry) {
+      var li = document.createElement('li');
+      var span = document.createElement('span');
+      span.className = 'entry';
+      var resultMatch = entry.split(' = ');
+      span.textContent = resultMatch[0];
+      var resultSpan = document.createElement('span');
+      resultSpan.className = 'entry-result';
+      resultSpan.textContent = '= ' + (resultMatch[1] || '');
+      li.appendChild(span);
+      li.appendChild(resultSpan);
+      li.addEventListener('click', function () {
+        if (resultMatch[1] !== undefined) {
+          allClear();
+          setDisplay(resultMatch[1]);
+          justEvaluated = true;
+        }
+      });
+      historyList.appendChild(li);
+    });
+  }
+
+  function clearHistory() {
+    history = [];
+    renderHistory();
+  }
+
+  function handleAction(action) {
+    switch (action) {
+      case 'clear':
+        allClear();
+        break;
+      case 'backspace':
+        backspace();
+        break;
+      case 'percent':
+        inputPercent();
+        break;
+      case 'divide':
+        setOperator('divide');
+        break;
+      case 'multiply':
+        setOperator('multiply');
+        break;
+      case 'subtract':
+        setOperator('subtract');
+        break;
+      case 'add':
+        setOperator('add');
+        break;
+      case 'sign':
+        inputSign();
+        break;
+      case 'decimal':
+        inputDecimal();
+        break;
+      case 'equals':
+        evaluate();
+        break;
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+        inputDigit(action);
+        break;
+      case 'MC': case 'MR': case 'M+': case 'M-':
+        handleMemory(action);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ---- Button clicks ----
+  document.querySelectorAll('.buttons button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      handleAction(btn.dataset.action);
+      btn.blur();
+    });
+  });
+
+  document.querySelectorAll('.memory-row button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      handleAction(btn.dataset.action);
+      btn.blur();
+    });
+  });
+
+  document.getElementById('clear-history').addEventListener('click', function () {
+    clearHistory();
+  });
+
+  // ---- Keyboard ----
+  document.addEventListener('keydown', function (e) {
+    var key = e.key;
+    if (/^[0-9]$/.test(key)) {
+      inputDigit(key);
+    } else if (key === '.') {
+      inputDecimal();
+    } else if (key === '+') {
+      setOperator('add');
+    } else if (key === '-') {
+      setOperator('subtract');
+    } else if (key === '*') {
+      setOperator('multiply');
+    } else if (key === '/') {
+      e.preventDefault();
+      setOperator('divide');
+    } else if (key === '%') {
+      inputPercent();
+    } else if (key === 'Enter' || key === '=') {
+      e.preventDefault();
+      evaluate();
+    } else if (key === 'Escape') {
+      allClear();
+    } else if (key === 'Backspace') {
+      e.preventDefault();
+      backspace();
+    } else {
+      return;
+    }
+    e.preventDefault();
+  });
+
+  // ---- Theme ----
+  var themeToggle = document.getElementById('theme-toggle');
+  var savedTheme = null;
+  try {
+    savedTheme = localStorage.getItem('calculator-theme');
+  } catch (err) {
+    savedTheme = null;
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('calculator-theme', theme);
+    } catch (err) {
+      // localStorage unavailable; theme still applies for this session.
+    }
+  }
+
+  if (savedTheme === 'dark' || savedTheme === 'light') {
+    applyTheme(savedTheme);
+  } else {
+    applyTheme('light');
+  }
+
+  themeToggle.addEventListener('click', function () {
+    var currentTheme = document.documentElement.getAttribute('data-theme');
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  });
+
+  // ---- Init ----
+  updateMemoryIndicator();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
