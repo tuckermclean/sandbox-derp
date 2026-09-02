@@ -2,11 +2,17 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
-function readTasks(filePath = process.env.TASKS_FILE || '.tasks.json') {
+function filePath() {
+  return process.env.TASKS_FILE || '.tasks.json';
+}
+
+function readTasks() {
+  const target = filePath();
   let raw;
   try {
-    raw = fs.readFileSync(filePath, 'utf8');
+    raw = fs.readFileSync(target, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') {
       return [];
@@ -22,17 +28,17 @@ function readTasks(filePath = process.env.TASKS_FILE || '.tasks.json') {
   }
 }
 
-function writeTasks(tasks, filePath = process.env.TASKS_FILE || '.tasks.json') {
-  const serialized = JSON.stringify(tasks, null, 2);
-  const dir = path.dirname(filePath);
+function writeTasks(tasks) {
+  const target = filePath();
+  const dir = path.dirname(target);
   const tmpPath = path.join(
     dir,
-    `.tasks-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`
+    `.tasks-${process.pid}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.tmp`
   );
 
   try {
-    fs.writeFileSync(tmpPath, serialized, 'utf8');
-    fs.renameSync(tmpPath, filePath);
+    fs.writeFileSync(tmpPath, JSON.stringify(tasks, null, 2), 'utf8');
+    fs.renameSync(tmpPath, target);
   } catch (err) {
     try {
       fs.unlinkSync(tmpPath);
@@ -43,4 +49,44 @@ function writeTasks(tasks, filePath = process.env.TASKS_FILE || '.tasks.json') {
   }
 }
 
-module.exports = { readTasks, writeTasks };
+function listTasks() {
+  return readTasks();
+}
+
+function addTask(title, tags = []) {
+  const tasks = readTasks();
+  const task = {
+    id: crypto.randomUUID(),
+    title,
+    tags,
+    done: false,
+    created: new Date().toISOString(),
+  };
+  tasks.push(task);
+  writeTasks(tasks);
+  return task;
+}
+
+function markDone(id) {
+  const tasks = readTasks();
+  const task = tasks.find((t) => t.id === id);
+  if (!task) {
+    throw new Error(`task not found: ${id}`);
+  }
+  task.done = true;
+  writeTasks(tasks);
+  return task;
+}
+
+function removeTask(id) {
+  const tasks = readTasks();
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) {
+    throw new Error(`task not found: ${id}`);
+  }
+  const [removed] = tasks.splice(index, 1);
+  writeTasks(tasks);
+  return removed;
+}
+
+module.exports = { listTasks, addTask, markDone, removeTask };
