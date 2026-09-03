@@ -1,17 +1,19 @@
 'use strict';
 
-const fs = require('node:fs');
+const fs = require('node:fs/promises');
 const path = require('node:path');
 
-function readTasks(filePath = process.env.TASKS_FILE || '.tasks.json') {
+const defaultFile = () => process.env.TASKS_FILE || '.tasks.json';
+
+async function loadTasks(filePath = defaultFile()) {
   let raw;
   try {
-    raw = fs.readFileSync(filePath, 'utf8');
+    raw = await fs.readFile(filePath, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') {
       return [];
     }
-    throw err;
+    return [];
   }
 
   try {
@@ -22,7 +24,7 @@ function readTasks(filePath = process.env.TASKS_FILE || '.tasks.json') {
   }
 }
 
-function writeTasks(tasks, filePath = process.env.TASKS_FILE || '.tasks.json') {
+async function saveTasks(tasks, filePath = defaultFile()) {
   const serialized = JSON.stringify(tasks, null, 2);
   const dir = path.dirname(filePath);
   const tmpPath = path.join(
@@ -31,11 +33,11 @@ function writeTasks(tasks, filePath = process.env.TASKS_FILE || '.tasks.json') {
   );
 
   try {
-    fs.writeFileSync(tmpPath, serialized, 'utf8');
-    fs.renameSync(tmpPath, filePath);
+    await fs.writeFile(tmpPath, serialized, 'utf8');
+    await fs.rename(tmpPath, filePath);
   } catch (err) {
     try {
-      fs.unlinkSync(tmpPath);
+      await fs.unlink(tmpPath);
     } catch (_) {
       // ignore cleanup failure; rethrow the original error
     }
@@ -43,4 +45,4 @@ function writeTasks(tasks, filePath = process.env.TASKS_FILE || '.tasks.json') {
   }
 }
 
-module.exports = { readTasks, writeTasks };
+module.exports = { loadTasks, saveTasks };
